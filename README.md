@@ -1,5 +1,7 @@
 # wireguard-k8s-lb
 
+## This repo is a WIP.
+
 ## Requirements
 
 - A small vpc in the cloud with a public ip
