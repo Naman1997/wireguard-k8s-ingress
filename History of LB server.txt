@@ -1,0 +1,11 @@
+History of LB server
+=========
+sudo apt update
+sudo apt dist-upgrade
+sudo apt install wireguard vim
+sudo reboot
+
+# Probably will need a list of ports to open from the user
+sudo iptables -I INPUT -p TCP --dport 80 -j ACCEPT
+sudo iptables -I INPUT -p TCP --dport 443 -j ACCEPT
+sudo iptables -I INPUT -p UDP --dport 51820 -j ACCEPT

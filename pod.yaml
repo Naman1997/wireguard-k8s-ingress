@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wireguard-pod
+spec:
+  containers:
+    - name: wireguard
+      image: namanarora/wireguard-lb:latest
+      command: [ "sleep" ]
+      args: [ "infinity" ] 
+      securityContext:
+        capabilities:
+          add:
+            - NET_ADMIN
+            - SYS_MODULE
+      env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "Asia/Kolkata"
+        - name: SERVERPORT
+          value: "51820"
+        - name: PEERS
+          value: "1"
+        - name: PEERDNS
+          value: "auto"
+        - name: INTERNAL_SUBNET
+          value: "10.1.0.0"
+        - name: ALLOWEDIPS
+          value: "0.0.0.0/0"
+        # Add other optional environment variables here
+  volumes:
+    - name: modules-volume
+      hostPath:
+        path: /lib/modules
+  restartPolicy: Always
