@@ -22,6 +22,14 @@
 - The service can now be consumed by a ingress as a load balancer for internal k8s services
 
 
+# Useful commands
+```
+sudo systemctl enable wg-quick@wg0.service
+sudo wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address>
+```
+
+Read (this)[https://www.digitalocean.com/community/tutorials/how-to-set-up-wireguard-on-ubuntu-20-04] doc - especially the section on ufw
+
 ## Credits
 
 This repo contains code from (docker-wireguard)[https://github.com/linuxserver/docker-wireguard]
