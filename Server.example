@@ -5,11 +5,3 @@ PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o
 PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o ens3 -j MASQUERADE;
 ListenPort = 51820 
 PrivateKey = <PrivateKey>
-
-[Peer]
-PublicKey = <PublicKey>
-AllowedIPs = 10.1.0.2/32
-
-[Peer]
-PublicKey = <PublicKey>
-AllowedIPs = 10.1.0.3/32

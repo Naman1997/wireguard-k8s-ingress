@@ -1,5 +1,10 @@
 FROM alpine:3.18
-RUN apk add --no-cache vim git jq curl
+WORKDIR /workspace
+RUN apk add --no-cache \ 
+  vim \
+  curl \
+  openssh \
+  wireguard-tools-wg-quick
 RUN \
   echo "**** install dependencies ****" && \
   apk add --no-cache --virtual=build-dependencies \
@@ -7,6 +12,7 @@ RUN \
     elfutils-dev \
     gcc \
     git \
+    jq \
     linux-headers && \
   apk add --no-cache \
     bc \
@@ -36,10 +42,12 @@ RUN \
   make -C src install && \
   echo "**** clean up ****" && \
   apk del --no-network build-dependencies && \
-  rm -rf \
-    /tmp/*
+  rm -rf /tmp/* && \
+  cd .. && \
+  rm -rf wireguard-tools
 
-EXPOSE 51820/udp
-
+EXPOSE 443/tcp
+EXPOSE 80/tcp
 COPY ["genkey.sh", "./"]
+RUN chmod +x genkey.sh
 CMD ["genkey.sh"]

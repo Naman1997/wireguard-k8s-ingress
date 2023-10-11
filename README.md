@@ -28,6 +28,7 @@
 ```
 sudo systemctl enable wg-quick@wg0.service
 sudo wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address>
+wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address> endpoint <endpoint domain>:<port> persistent-keepalive 25
 ```
 
 Read (this)[https://www.digitalocean.com/community/tutorials/how-to-set-up-wireguard-on-ubuntu-20-04] doc - especially the section on ufw
