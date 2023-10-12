@@ -46,8 +46,6 @@ RUN \
   cd .. && \
   rm -rf wireguard-tools
 
-EXPOSE 443/tcp
-EXPOSE 80/tcp
-COPY ["genkey.sh", "./"]
-RUN chmod +x genkey.sh
-CMD ["genkey.sh"]
+COPY ["genkey.sh", "remove_peer.sh", "./"]
+RUN chmod +x remove_peer.sh genkey.sh
+CMD ["sh genkey.sh"]

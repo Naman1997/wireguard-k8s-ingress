@@ -27,6 +27,19 @@ spec:
           value: "1000"
         - name: TZ
           value: "Asia/Kolkata"
+      livenessProbe:
+        exec:
+          command:
+          - ping -c 1 10.1.0.1
+        initialDelaySeconds: 10
+        periodSeconds: 15
+      lifecycle:
+        preStop:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - /workspace/remove_peer.sh
   volumes:
     - name: secret-volume
       secret:
