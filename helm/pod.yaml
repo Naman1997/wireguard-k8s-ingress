@@ -6,8 +6,15 @@ spec:
   containers:
     - name: wireguard
       image: namanarora/wireguard-lb:latest
-      command: [ "sleep" ]
-      args: [ "infinity" ] 
+      command: ["sleep"]
+      args: ["infinity"]
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /ssh
+          subPath: ssh-key
+      envFrom:
+        - configMapRef:
+            name: my-config
       securityContext:
         capabilities:
           add:
@@ -20,18 +27,14 @@ spec:
           value: "1000"
         - name: TZ
           value: "Asia/Kolkata"
-        - name: SERVERPORT
-          value: "51820"
-        - name: PEERS
-          value: "1"
-        - name: PEERDNS
-          value: "auto"
-        - name: INTERNAL_SUBNET
-          value: "10.1.0.0"
-        - name: ALLOWEDIPS
-          value: "0.0.0.0/0"
-        # Add other optional environment variables here
   volumes:
+    - name: secret-volume
+      secret:
+        secretName: ssh-key-secret
+        items:
+          - key: ssh-key
+            path: ssh-key
+            mode: 0600 
     - name: modules-volume
       hostPath:
         path: /lib/modules
