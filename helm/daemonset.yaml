@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: wireguard-lb
+  # namespace: default
+spec:
+  selector:
+    matchLabels:
+      k8s-app: wireguard-lb
+  template:
+    metadata:
+      name: wireguard-lb
+      labels:
+        k8s-app: wireguard-lb
+    spec:
+      serviceAccountName: wireguard-lb-sa
+      initContainers:
+        - name: wait-for-wireguard-init
+          image: bitnami/kubectl:latest
+          command: ["kubectl"]
+          args: ["wait", "--for=condition=Complete", "job/wireguard-init"]
+      containers:
+        - name: wireguard-lb
+          image: namanarora/wireguard-lb:latest
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /ssh
+              subPath: ssh-key
+          envFrom:
+            - configMapRef:
+                name: my-config
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          # env:
+          #   - name: PUID
+          #     value: "1000"
+          #   - name: PGID
+          #     value: "1000"
+          #   - name: TZ
+          #     value: "Asia/Kolkata"
+          livenessProbe:
+            exec:
+              command:
+              - ping 
+              - -c 
+              - "1"
+              - -W
+              - "2"
+              - "10.1.0.1"
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "remove_peer.sh"]
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: ssh-key-secret
+            items:
+              - key: ssh-key
+                path: ssh-key
+                mode: 0600 
+        - name: modules-volume
+          hostPath:
+            path: /lib/modules
+      restartPolicy: Always

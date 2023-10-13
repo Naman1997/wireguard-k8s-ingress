@@ -46,6 +46,6 @@ RUN \
   cd .. && \
   rm -rf wireguard-tools
 
-COPY ["genkey.sh", "remove_peer.sh", "./"]
-RUN chmod +x remove_peer.sh genkey.sh
-CMD ["sh genkey.sh"]
+COPY ./scripts/* ./
+RUN chmod +x ./*
+ENTRYPOINT ["/bin/sh", "create-wg-connection.sh"]
