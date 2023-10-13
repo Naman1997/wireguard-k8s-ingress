@@ -9,11 +9,11 @@ spec:
       containers:
         - name: wireguard-init-container
           image: namanarora/wireguard-lb:latest
-          command: ["/bin/sh"]
-          args: ["init.sh"]
+          command: ["sleep"]
+          args: ["infinity"]
           volumeMounts:
             - name: secret-volume
-              mountPath: /ssh
+              mountPath: /workspace/ssh
               subPath: ssh-key
           envFrom:
             - configMapRef:
@@ -33,4 +33,8 @@ spec:
               - key: ssh-key
                 path: ssh-key
                 mode: 0600
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 0
+        fsGroup: 1000
       restartPolicy: OnFailure

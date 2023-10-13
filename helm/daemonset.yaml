@@ -24,7 +24,7 @@ spec:
           image: namanarora/wireguard-lb:latest
           volumeMounts:
             - name: secret-volume
-              mountPath: /ssh
+              mountPath: /workspace/ssh
               subPath: ssh-key
           envFrom:
             - configMapRef:
@@ -54,7 +54,7 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "remove_peer.sh"]
+                command: ["/bin/rbash", "remove_peer.sh"]
       volumes:
         - name: secret-volume
           secret:
@@ -66,4 +66,8 @@ spec:
         - name: modules-volume
           hostPath:
             path: /lib/modules
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 0
+        fsGroup: 1000
       restartPolicy: Always

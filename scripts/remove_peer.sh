@@ -1,6 +1,6 @@
-#!/usr/bin/with-contenv bash
+#!/bin/rbash
 ENDPOINT_PUBLIC_KEY=$(cat publickey)
-ssh -i /ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T $load_balancer_user@$load_balancer_ip /bin/bash <<ENDSSH
+ssh -i /workspace/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T $load_balancer_user@$load_balancer_ip /bin/bash <<ENDSSH
     sudo wg set wg0 peer $ENDPOINT_PUBLIC_KEY remove
 ENDSSH
 

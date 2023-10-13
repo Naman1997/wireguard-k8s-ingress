@@ -1,10 +1,9 @@
 FROM alpine:3.18
-WORKDIR /workspace
-RUN apk add --no-cache \ 
-  vim \
-  curl \
+
+RUN apk add --no-cache \
   openssh \
-  wireguard-tools-wg-quick
+  wireguard-tools-wg-quick \
+  sudo
 RUN \
   echo "**** install dependencies ****" && \
   apk add --no-cache --virtual=build-dependencies \
@@ -13,6 +12,7 @@ RUN \
     gcc \
     git \
     jq \
+    curl \
     linux-headers && \
   apk add --no-cache \
     bc \
@@ -46,6 +46,28 @@ RUN \
   cd .. && \
   rm -rf wireguard-tools
 
+WORKDIR /workspace
 COPY ./scripts/* ./
 RUN chmod +x ./*
-ENTRYPOINT ["/bin/sh", "create-wg-connection.sh"]
+COPY .bash_profile ./.bash_profile
+
+RUN mkdir -p /workspace/programs && \
+    ln -s /usr/bin/wg-quick /workspace/programs/ && \
+    ln -s /usr/bin/wg /workspace/programs/ && \
+    # Remove the line below!!
+    ln -s /usr/bin/sleep /workspace/programs/ && \
+    ln -s /usr/bin/ssh /workspace/programs/ && \
+    ln -s /usr/bin/scp /workspace/programs/ && \
+    ln -s /usr/bin/exit /workspace/programs/ && \
+    ln -s /bin/rm /workspace/programs/ && \
+    ln -s /bin/cat /workspace/programs/ && \
+    ln -s /bin/echo /workspace/programs/
+RUN adduser -s /bin/rbash -h /workspace --disabled-password -g 0 1000
+RUN echo "wireproxy ALL=(ALL) NOPASSWD: /usr/bin/wg-quick" > /etc/sudoers.d/wireproxy
+
+RUN chattr +i /workspace/.bash_profile && \
+    mv /bin/bash /bin/rbash && \
+    rm -f /bin/sh
+
+USER 1000
+ENTRYPOINT ["/bin/rbash", "create-wg-connection.sh"]
