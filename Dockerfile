@@ -4,7 +4,8 @@ RUN apk add --no-cache \
   vim \
   curl \
   openssh \
-  wireguard-tools-wg-quick
+  wireguard-tools-wg-quick \
+  openresolv
 RUN \
   echo "**** install dependencies ****" && \
   apk add --no-cache --virtual=build-dependencies \

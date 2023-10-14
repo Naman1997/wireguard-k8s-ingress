@@ -12,6 +12,7 @@ cat > wg0.conf <<EOF
 [Interface]
 PrivateKey = $(cat privatekey)
 Address = 10.1.0.$LAST_OCTET/24
+DNS = 10.96.0.10
 EOF
 
 wg-quick up ./wg0.conf

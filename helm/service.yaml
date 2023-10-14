@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: wireguard-lb-service
 spec:
+  # type: LoadBalancer
+  # allocateLoadBalancerNodePorts: false
   selector:
     k8s-app: wireguard-lb
   ports:

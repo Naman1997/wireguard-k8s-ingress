@@ -19,6 +19,17 @@ spec:
           image: bitnami/kubectl:latest
           command: ["kubectl"]
           args: ["wait", "--for=condition=Complete", "job/wireguard-init"]
+        - name: sysctls
+          image: busybox
+          command:
+          - sh
+          - -c
+          - sysctl -w net.ipv4.ip_forward=1 && sysctl -w net.ipv4.conf.all.forwarding=1
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
       containers:
         - name: wireguard-lb
           image: namanarora/wireguard-lb:latest
