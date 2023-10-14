@@ -19,6 +19,17 @@ spec:
           image: bitnami/kubectl:latest
           command: ["kubectl"]
           args: ["wait", "--for=condition=Complete", "job/wireguard-init"]
+        - name: init-container
+          image: linuxserver/wireguard:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - CLIENT_PRIVATE_KEY=$(wg genkey);
+              CLIENT_PUBLIC_KEY=$(echo "$CLIENT_PRIVATE_KEY" | wg pubkey);
+              echo "$CLIENT_PRIVATE_KEY" > /config/CLIENT_PRIVATE_KEY;
+              echo "$CLIENT_PUBLIC_KEY" > /config/CLIENT_PUBLIC_KEY;
+          volumeMounts:
+            - name: config
+              mountPath: /config
       containers:
         - name: wireguard-lb
           image: namanarora/wireguard-lb:latest
@@ -26,6 +37,8 @@ spec:
             - name: secret-volume
               mountPath: /workspace/ssh
               subPath: ssh-key
+            - name: config
+              mountPath: /workspace/config
           envFrom:
             - configMapRef:
                 name: my-config
@@ -33,13 +46,6 @@ spec:
             capabilities:
               add:
                 - NET_ADMIN
-          # env:
-          #   - name: PUID
-          #     value: "1000"
-          #   - name: PGID
-          #     value: "1000"
-          #   - name: TZ
-          #     value: "Asia/Kolkata"
           livenessProbe:
             exec:
               command:
@@ -66,6 +72,8 @@ spec:
         - name: modules-volume
           hostPath:
             path: /lib/modules
+        - name: config
+          emptyDir: {}
       securityContext:
         runAsUser: 1000
         runAsGroup: 0

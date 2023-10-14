@@ -9,8 +9,8 @@ spec:
       containers:
         - name: wireguard-init-container
           image: namanarora/wireguard-lb:latest
-          command: ["sleep"]
-          args: ["infinity"]
+          command: ["/bin/rbash"]
+          args: ["init.sh"]
           volumeMounts:
             - name: secret-volume
               mountPath: /workspace/ssh
@@ -18,13 +18,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: my-config
-          # env:
-          #   - name: PUID
-          #     value: "1000"
-          #   - name: PGID
-          #     value: "1000"
-          #   - name: TZ
-          #     value: "Asia/Kolkata"
       volumes:
         - name: secret-volume
           secret:

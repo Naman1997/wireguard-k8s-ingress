@@ -48,26 +48,35 @@ RUN \
 
 WORKDIR /workspace
 COPY ./scripts/* ./
-RUN chmod +x ./*
-COPY .bash_profile ./.bash_profile
+RUN chmod +x ./* && \
+    mv /bin/bash /bin/rbash
 
 RUN mkdir -p /workspace/programs && \
     ln -s /usr/bin/wg-quick /workspace/programs/ && \
     ln -s /usr/bin/wg /workspace/programs/ && \
-    # Remove the line below!!
-    ln -s /usr/bin/sleep /workspace/programs/ && \
     ln -s /usr/bin/ssh /workspace/programs/ && \
     ln -s /usr/bin/scp /workspace/programs/ && \
     ln -s /usr/bin/exit /workspace/programs/ && \
     ln -s /bin/rm /workspace/programs/ && \
     ln -s /bin/cat /workspace/programs/ && \
-    ln -s /bin/echo /workspace/programs/
+    ln -s /bin/echo /workspace/programs/ && \
+    ln -s /sbin/ip /workspace/programs/ && \
+    ln -s /bin/grep /workspace/programs/ && \
+    ln -s /usr/bin/tail /workspace/programs/ && \
+    ln -s /usr/bin/awk /workspace/programs/ && \
+    ln -s /usr/bin/tee /workspace/programs/ && \
+    ln -s /bin/rbash /workspace/programs/ && \
+    ln -s /usr/bin/sudo /workspace/programs/
+
+# Only use when developing
+RUN ln -s /bin/sleep /workspace/programs/ && \
+    ln -s /bin/ls /workspace/programs/ && \
+    ln -s /usr/bin/which /workspace/programs/
+
 RUN adduser -s /bin/rbash -h /workspace --disabled-password -g 0 1000
 RUN echo "wireproxy ALL=(ALL) NOPASSWD: /usr/bin/wg-quick" > /etc/sudoers.d/wireproxy
-
-RUN chattr +i /workspace/.bash_profile && \
-    mv /bin/bash /bin/rbash && \
-    rm -f /bin/sh
+RUN rm -f /bin/sh
+ENV PATH=/workspace/programs
 
 USER 1000
 ENTRYPOINT ["/bin/rbash", "create-wg-connection.sh"]
