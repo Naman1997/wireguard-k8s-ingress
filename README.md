@@ -2,37 +2,37 @@
 
 ## This repo is a WIP.
 
-## Requirements
+## Hardware Requirements
 
-- A small vpc in the cloud with a public ip
-- A kubernetes cluster with permissions to pass NET_ADMIN and SYS_MODULE process caps
+- A small cloud vm with a public ip - this will act as the gateway for all traffic
+- At least one lxc container that connects to the cloud vm over wireguard in cloud
+- A kubernetes cluster running in the same subnet as the lxc containers
 
 ## Rough structure
 
-- Inputs: Public key from the public vpc
-- Need a daemonset and a service. Daemonset will run the wireguard image and the public key will be passed into the pod via a configmap.
-- The pod should generate it's own public and private keys on runtime (init container?)
-- The pod will need some way to send its own public key to the the lb server (scp/ssh?)
-- Since multiple pods will try to write to the file at the same time, there needs to be a lock file managed in the cluster
-- Let's say pod 1 is created first - it'll capture the lock in a configmap
-- While the lock is present in the configmap, other pods need to wait and keep retrying
-- The 1st pod will ssh into the lb server and update the wg0 file. It'll also restart the wg0 service
-- Once the service is restarted, it'll sleep 5 seconds
-- Now, it'll release the lock in the configmap
-- Now, other pods will compete to add themselves as the next peer
-- The service will basically capture the traffic from the tunnel
-- The service can now be consumed by a ingress as a load balancer for internal k8s services
+- Create a small cloud vm in AWS and install wireguard, docker & fail2ban using user-data
+- Create lxc containers in Proxmox to be used as ingress endpoints (externalIPs) for the cluster
+- Wait for ssh to the cloud vm and lxc containers
+- On the cloud vm: Run `scripts/init.sh` (probably need to modify this) (null resource)
+- On the lxc containers: Run `scripts/create-wg-connections.sh` (maybe part of lxc module) (change logic for LAST_OCTET - use index of the lxc resource for this value)
+- Test the wireguard connection
+- On the cloud vm:
+    - Figure out the `UUID` and `PGID` of the user
+    - Set up these docker containers:
+        - DuckDNS container for ddns (use docker-compose)
+        - WatchTower to always keep containers up to date (can be configured to not be added) (staging v/s prod ingress can differ here)
+        - Nginx container to proxy domain names to route ingress traffic for duckdns subdomains to the wireguard IPs
+        - Certbot for ssl certs for each domain
+- On the host(?) run helm install to install k8s ingress with externalIPs of the lxc containers
 
 
-# Useful commands
+# Useful commands/docs
 ```
 sudo systemctl enable wg-quick@wg0.service
 sudo wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address>
 wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address> endpoint <endpoint domain>:<port> persistent-keepalive 25
 ```
 
-Read (this)[https://www.digitalocean.com/community/tutorials/how-to-set-up-wireguard-on-ubuntu-20-04] doc - especially the section on ufw
+https://github.com/joncombe/docker-nginx-letsencrypt-setup/tree/main [Probably need to see if this can work with stable-alpine image tag]
 
-## Credits
-
-This repo contains code from (docker-wireguard)[https://github.com/linuxserver/docker-wireguard]
+https://hub.docker.com/r/linuxserver/duckdns [docker-compose section]

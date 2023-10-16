@@ -1,0 +1,19 @@
+# AWS config
+region = "ap-south-2"
+
+# AMI config
+ami_id = "ami-05ee875a6841a8ca0"
+ami_username = "ec2-user"
+
+# Instance config
+wireguard_port = 51820
+instance_type = "t3.nano"
+ssh_public_key = "~/.ssh/id_rsa.pub"
+user_data = <<-EOF
+  #!/bin/bash
+  yum -y update
+  amazon-linux-extras install epel
+  yum -y install wireguard-tools docker
+  systemctl enable docker
+  systemctl start docker
+  EOF
