@@ -1,4 +1,4 @@
-# wireguard-k8s-lb
+# wireguard-k8s-ingress
 
 ## This repo is a WIP.
 
