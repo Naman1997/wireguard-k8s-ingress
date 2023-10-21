@@ -1,8 +1,10 @@
+# AWS config
 variable "region" {
   description = "AWS Region for this instance"
   type = string
 }
 
+# AMI config
 variable "ami_id" {
   description = "AMI to be used for this instance"
   type = string
@@ -12,6 +14,12 @@ variable "ami_id" {
   }
 }
 
+variable "ami_username" {
+  description = "Username to be used for SSH"
+  type = string
+}
+
+# Instance config
 variable "instance_type" {
   description = "AWS Instance Type"
   type = string
@@ -27,12 +35,48 @@ variable "ssh_public_key" {
   type = string
 }
 
-variable "ami_username" {
-  description = "Username to be used for SSH"
-  type = string
-}
-
 variable "user_data" {
   description = "User Data for instance"
   type = string
+}
+
+# Proxmox config
+variable "PROXMOX_API_ENDPOINT" {
+  description = "API endpoint for proxmox"
+  type        = string
+}
+
+variable "PROXMOX_USERNAME" {
+  description = "User name used to login proxmox"
+  type        = string
+}
+
+variable "PROXMOX_PASSWORD" {
+  description = "Password used to login proxmox"
+  type        = string
+}
+
+variable "PROXMOX_IP" {
+  description = "IP address for proxmox"
+  type        = string
+}
+
+variable "DEFAULT_BRIDGE" {
+  description = "Bridge to use when creating VMs in proxmox"
+  type        = string
+}
+
+variable "TARGET_NODE" {
+  description = "Target node name in proxmox"
+  type        = string
+}
+
+variable "TEMPLATE_STORAGE" {
+  description = "Name of storage containing container templates in proxmox"
+  type        = string
+}
+
+variable "SSH_PRIVATE_KEY" {
+  description = "SSH private key that can be used to login to the proxmox node"
+  type        = string
 }

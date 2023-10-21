@@ -2,18 +2,30 @@
 region = "ap-south-2"
 
 # AMI config
-ami_id = "ami-05ee875a6841a8ca0"
+ami_id       = "ami-05ee875a6841a8ca0"
 ami_username = "ec2-user"
 
 # Instance config
 wireguard_port = 51820
-instance_type = "t3.nano"
+instance_type  = "t3.nano"
 ssh_public_key = "~/.ssh/id_rsa.pub"
-user_data = <<-EOF
+user_data      = <<-EOF
   #!/bin/bash
   yum -y update
   amazon-linux-extras install epel
-  yum -y install wireguard-tools docker
+  yum -y install wireguard-tools docker fail2ban
   systemctl enable docker
   systemctl start docker
+  systemctl enable fail2ban
+  systemctl start fail2ban
   EOF
+
+# Proxmox config
+PROXMOX_API_ENDPOINT = "https://192.168.0.103:8006/api2/json"
+PROXMOX_USERNAME     = "root"
+PROXMOX_PASSWORD     = "password"
+PROXMOX_IP           = "192.168.0.103"
+DEFAULT_BRIDGE       = "vmbr0"
+TARGET_NODE          = "pve"
+TEMPLATE_STORAGE     = "local"
+SSH_PRIVATE_KEY      = "~/.ssh/id_rsa.pub"

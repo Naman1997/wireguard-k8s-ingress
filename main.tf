@@ -1,5 +1,21 @@
-provider "aws" {
-  region = var.region
+terraform {
+  required_providers {
+    proxmox = {
+      source  = "telmate/proxmox"
+      version = "2.9.14"
+    }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.22.0"
+    }
+  }
+}
+
+provider "proxmox" {
+  pm_api_url      = var.PROXMOX_API_ENDPOINT
+  pm_user         = "${var.PROXMOX_USERNAME}@pam"
+  pm_password     = var.PROXMOX_PASSWORD
+  pm_tls_insecure = true
 }
 
 resource "aws_key_pair" "wg_key" {
@@ -13,7 +29,7 @@ resource "aws_key_pair" "wg_key" {
 resource "aws_security_group" "wg_sg" {
   name        = "wg-security-group"
   description = "wg security group for SSH, HTTP, HTTPS and WireGuard"
-  
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -21,7 +37,7 @@ resource "aws_security_group" "wg_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow all outbound traffic"
   }
-  
+
   ingress {
     from_port   = 22
     to_port     = 22
@@ -29,7 +45,7 @@ resource "aws_security_group" "wg_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "SSH access"
   }
-  
+
   ingress {
     from_port   = 80
     to_port     = 80
@@ -37,7 +53,7 @@ resource "aws_security_group" "wg_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "HTTP access"
   }
-  
+
   ingress {
     from_port   = 443
     to_port     = 443
@@ -45,7 +61,7 @@ resource "aws_security_group" "wg_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "HTTPS access"
   }
-  
+
   ingress {
     from_port   = var.wireguard_port
     to_port     = var.wireguard_port
@@ -74,3 +90,55 @@ resource "aws_instance" "wg_instance" {
     Name = "WireGuard K8s Ingress"
   }
 }
+
+resource "null_resource" "versions" {
+  provisioner "remote-exec" {
+    when = create
+    connection {
+      host     = var.PROXMOX_IP
+      user     = var.PROXMOX_USERNAME
+      password = var.PROXMOX_PASSWORD
+    }
+
+    inline = [
+      "ssh",
+      "${var.PROXMOX_USERNAME}@${var.PROXMOX_IP}",
+      "-i",
+      "${var.SSH_PRIVATE_KEY}",
+      "latest_version=\"$(pveam available | grep alpine | awk '{print $2}' | sort -V | tail -n 1)\"",
+      "echo \"{\\\"version\\\":\\\"$latest_version\\\"}\" > /tmp/data"
+    ]
+  }
+}
+
+data "external" "version" {
+  program = [
+    "ssh",
+    "${var.PROXMOX_USERNAME}@${var.PROXMOX_IP}",
+    "-i",
+    "${var.SSH_PRIVATE_KEY}",
+    "cat /tmp/data"
+  ]
+}
+
+
+locals {
+  alpine_version = data.external.version.result["version"]
+}
+
+
+resource "null_resource" "create_template" {
+  provisioner "remote-exec" {
+    when = create
+    connection {
+      host     = var.PROXMOX_IP
+      user     = var.PROXMOX_USERNAME
+      password = var.PROXMOX_PASSWORD
+    }
+
+    inline = [ 
+      "pveam download ${var.TEMPLATE_STORAGE} ${local.alpine_version}" 
+    ]
+  }
+}
+
