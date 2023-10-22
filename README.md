@@ -5,16 +5,16 @@
 ## Hardware Requirements
 
 - A small cloud vm with a public ip - this will act as the gateway for all traffic
-- At least one lxc container that connects to the cloud vm over wireguard in cloud
-- A kubernetes cluster running in the same subnet as the lxc containers
+- One proxmox vm that connects to the cloud vm over wireguard in cloud
+- A kubernetes cluster running in the same subnet as the proxmox vm
 
 ## Rough structure
 
 - Create a small cloud vm in AWS and install wireguard, docker & fail2ban using user-data
-- Create lxc containers in Proxmox to be used as ingress endpoints (externalIPs) for the cluster
-- Wait for ssh to the cloud vm and lxc containers
+- Create proxmox vm in Proxmox to be used as ingress endpoints (externalIPs) for the cluster
+- Wait for ssh to the cloud vm and proxmox vm
 - On the cloud vm: Run `scripts/init.sh` (probably need to modify this) (null resource)
-- On the lxc containers: Run `scripts/create-wg-connections.sh` (maybe part of lxc module) (change logic for LAST_OCTET - use index of the lxc resource for this value)
+- On the proxmox vm: Run `scripts/create-wg-connections.sh` (maybe part of lxc module) (change logic for LAST_OCTET - use index of the lxc resource for this value)
 - Test the wireguard connection
 - On the cloud vm:
     - Figure out the `UUID` and `PGID` of the user
@@ -23,7 +23,7 @@
         - WatchTower to always keep containers up to date (can be configured to not be added) (staging v/s prod ingress can differ here)
         - Nginx container to proxy domain names to route ingress traffic for duckdns subdomains to the wireguard IPs
         - Certbot for ssl certs for each domain
-- On the host(?) run helm install to install k8s ingress with externalIPs of the lxc containers
+- On the host(?) run helm install to install k8s ingress with externalIPs of the proxmox vm
 
 
 # Useful commands/docs

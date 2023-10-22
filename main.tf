@@ -91,42 +91,21 @@ provider "proxmox" {
 #   }
 # }
 
-resource "null_resource" "versions" {
-  provisioner "remote-exec" {
-    when = create
-    connection {
-      host     = var.PROXMOX_IP
-      user     = var.PROXMOX_USERNAME
-      password = var.PROXMOX_PASSWORD
-    }
-
-    inline = [
-      "rm -f /tmp/alpine_version",
-      "latest_version=\"$(pveam available | grep alpine | awk '{print $2}' | sort -V | tail -n 1)\"",
-      "echo \"{\\\"version\\\":\\\"$latest_version\\\"}\" > /tmp/alpine_version"
-    ]
-  }
-}
-
-data "external" "version" {
-  depends_on = [null_resource.versions]
+data "external" "versions" {
   program = [
-    "ssh",
-    "${var.PROXMOX_USERNAME}@${var.PROXMOX_IP}",
-    "-i",
-    "${var.SSH_PRIVATE_KEY}",
-    "cat /tmp/alpine_version"
+    "${path.module}/scripts/versions.sh",
   ]
 }
 
 locals {
-  alpine_version = data.external.version.result["version"]
+  latest_version = data.external.versions.result["latest_version"]
+  sha            = data.external.versions.result["sha"]
+  iso_url        = "https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/x86_64/${local.latest_version}"
 }
 
 resource "null_resource" "create_template" {
   depends_on = [
-    null_resource.versions,
-    data.external.version
+    data.external.versions
   ]
   provisioner "remote-exec" {
     when = create
@@ -137,8 +116,10 @@ resource "null_resource" "create_template" {
     }
 
     inline = [
-      "pveam download ${var.TEMPLATE_STORAGE} ${local.alpine_version}"
+      "cd /var/lib/vz/template/iso",
+      "wget ${local.iso_url}",
+      "calculated_sha=$(sha512sum ${local.latest_version} | awk '{print $1}')",
+      "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!\" && rm ${local.latest_version} && exit 1; fi"
     ]
   }
 }
-
