@@ -15,23 +15,12 @@ resource "proxmox_vm_qemu" "node" {
   onboot            = var.autostart
   target_node       = var.target_node
   scsihw            = "virtio-scsi-pci"
-  clone             = "ubuntu-golden"
-  bios              = "ovmf"
+
   full_clone        = true
-  os_type           = "ubuntu"
-  os_network_config = <<EOF
-    auto eth0
-    iface eth0 inet dhcp
-    EOF
+  clone             = "ubuntu-golden"
 
   network {
-    model  = "e1000"
+    model  = "virtio"
     bridge = var.default_bridge
   }
-}
-
-data "external" "address" {
-  depends_on  = [proxmox_vm_qemu.node]
-  working_dir = path.root
-  program     = ["bash", "scripts/ip.sh", "${lower(proxmox_vm_qemu.node.network[0].macaddr)}"]
 }
