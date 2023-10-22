@@ -28,4 +28,10 @@ PROXMOX_IP           = "192.168.0.103"
 DEFAULT_BRIDGE       = "vmbr0"
 TARGET_NODE          = "pve"
 TEMPLATE_STORAGE     = "local"
-SSH_PRIVATE_KEY      = "~/.ssh/id_rsa.pub"
+
+# Jump box config
+jumpbox_public_key      = "~/.ssh/id_rsa.pub"
+jumpbox_memory = 2048
+jumpbox_cores = 2
+jumpbox_sockets = 1
+jumpbox_power_onboot = true

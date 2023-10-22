@@ -1,13 +1,12 @@
 #!/bin/bash
 BOOTDISK=scsi0
 qm destroy 6000 || true
-qm create 6000 --memory 2048 --net0 virtio,bridge=vmbr0 --agent 1 --cores 2 --sockets 1 --cpu host
+qm create 6000 --memory 2048 --net0 virtio,bridge=vmbr0 --cores 2 --sockets 1
 qm importdisk 6000 ubuntu-template/ubuntu.img local-lvm
 qm set 6000 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-6000-disk-0,cache=writeback,discard=on
 qm set 6000 --boot c --bootdisk $BOOTDISK
 qm resize 6000 $BOOTDISK +5G
 qm set 6000 --ipconfig0 ip=dhcp
-qm set 6000 --bios ovmf
 qm set 6000 -efidisk0 local-lvm:0,format=raw,efitype=4m,pre-enrolled-keys=0
 qm set 6000 --ide2 local-lvm:cloudinit
 qm set 6000 --ciuser wg --citype nocloud --ipconfig0 ip=dhcp

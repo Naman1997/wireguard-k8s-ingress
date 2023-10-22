@@ -120,40 +120,40 @@ locals {
   iso_url = "https://cloud-images.ubuntu.com/mantic/current/${local.version}"
 }
 
-# resource "null_resource" "prepare_files" {
-#   depends_on = [data.external.versions]
-#   provisioner "remote-exec" {
-#     when = create
-#     connection {
-#       host     = var.PROXMOX_IP
-#       user     = var.PROXMOX_USERNAME
-#       password = var.PROXMOX_PASSWORD
-#     }
+resource "null_resource" "prepare_files" {
+  depends_on = [data.external.versions]
+  provisioner "remote-exec" {
+    when = create
+    connection {
+      host     = var.PROXMOX_IP
+      user     = var.PROXMOX_USERNAME
+      password = var.PROXMOX_PASSWORD
+    }
 
-#     inline = [
-#       "mkdir -p /var/lib/vz/snippets",
-#       "cd /root/ubuntu-template",
-#       "wget -O ubuntu.img ${local.iso_url}",
-#       "calculated_sha=$(sha256sum ubuntu.img | awk '{print $1}')",
-#       "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!!!!!\" && rm ubuntu.img && exit 1; fi"
-#     ]
-#   }
+    inline = [
+      "mkdir -p /var/lib/vz/snippets",
+      "cd /root/ubuntu-template",
+      "wget -O ubuntu.img ${local.iso_url}",
+      "calculated_sha=$(sha256sum ubuntu.img | awk '{print $1}')",
+      "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!!!!!\" && rm ubuntu.img && exit 1; fi"
+    ]
+  }
 
-#   provisioner "file" {
-#     when        = create
-#     source      = var.jumpbox_public_key
-#     destination = "/root/ubuntu-template/id_rsa.pub"
-#     connection {
-#       type     = "ssh"
-#       host     = var.PROXMOX_IP
-#       user     = var.PROXMOX_USERNAME
-#       password = var.PROXMOX_PASSWORD
-#     }
-#   }
-# }
+  provisioner "file" {
+    when        = create
+    source      = var.jumpbox_public_key
+    destination = "/root/ubuntu-template/id_rsa.pub"
+    connection {
+      type     = "ssh"
+      host     = var.PROXMOX_IP
+      user     = var.PROXMOX_USERNAME
+      password = var.PROXMOX_PASSWORD
+    }
+  }
+}
 
 resource "null_resource" "create_template" {
-  # depends_on = [null_resource.prepare_files]
+  depends_on = [null_resource.prepare_files]
 
   provisioner "remote-exec" {
     when = create
@@ -167,19 +167,22 @@ resource "null_resource" "create_template" {
   }
 }
 
-resource "proxmox_vm_qemu" "wg-jumpbox" {
-  depends_on  = [null_resource.create_template]
-  name        = "wg-jumpbox"
-  target_node = var.TARGET_NODE
-  memory      = var.jumpbox_memory
-  cores       = var.jumpbox_cores
-  agent       = 1
-  onboot      = var.jumpbox_power_onboot
-  bootdisk    = "scsi0"
-  clone       = "ubuntu-golden"
-  full_clone  = true
-  network {
-    model  = "virtio"
-    bridge = var.DEFAULT_BRIDGE
-  }
+resource "time_sleep" "sleep" {
+  depends_on      = [null_resource.create_template]
+  create_duration = "30s"
+}
+
+module "master_domain" {
+
+  depends_on = [time_sleep.sleep]
+
+  source         = "./modules/domain"
+  count          = 1
+  name           = "wg-jumpbox"
+  memory         = var.jumpbox_memory
+  vcpus          = var.jumpbox_cores
+  sockets        = var.jumpbox_sockets
+  autostart      = var.jumpbox_power_onboot
+  default_bridge = var.DEFAULT_BRIDGE
+  target_node    = var.TARGET_NODE
 }

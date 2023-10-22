@@ -92,6 +92,11 @@ variable "jumpbox_cores" {
   type        = number
 }
 
+variable "jumpbox_sockets" {
+  description = "Jumpbox cpu sockets"
+  type        = number
+}
+
 variable "jumpbox_power_onboot" {
   description = "Poweron jumpbox whenever host node powers on"
   type        = bool
