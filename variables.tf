@@ -76,7 +76,23 @@ variable "TEMPLATE_STORAGE" {
   type        = string
 }
 
-variable "SSH_PRIVATE_KEY" {
-  description = "SSH private key that can be used to login to the proxmox node"
+# Jump box config
+variable "jumpbox_public_key" {
+  description = "SSH public key that will be used to login to wg jumpbox"
   type        = string
+}
+
+variable "jumpbox_memory" {
+  description = "Jumpbox memory"
+  type        = number
+}
+
+variable "jumpbox_cores" {
+  description = "Jumpbox cpu cores"
+  type        = number
+}
+
+variable "jumpbox_power_onboot" {
+  description = "Poweron jumpbox whenever host node powers on"
+  type        = bool
 }

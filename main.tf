@@ -91,22 +91,70 @@ provider "proxmox" {
 #   }
 # }
 
+resource "null_resource" "prepare_folders" {
+  provisioner "remote-exec" {
+    connection {
+      host        = var.PROXMOX_IP
+      user        = var.PROXMOX_USERNAME
+      private_key = file("~/.ssh/id_rsa")
+    }
+
+    inline = [
+      "rm -rf /root/ubuntu-template",
+      "mkdir /root/ubuntu-template"
+    ]
+  }
+}
+
 data "external" "versions" {
+  depends_on = [null_resource.prepare_folders]
   program = [
     "${path.module}/scripts/versions.sh",
+    "${local.version}"
   ]
 }
 
 locals {
-  latest_version = data.external.versions.result["latest_version"]
-  sha            = data.external.versions.result["sha"]
-  iso_url        = "https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/x86_64/${local.latest_version}"
+  version = "mantic-server-cloudimg-amd64.img"
+  sha     = data.external.versions.result["sha"]
+  iso_url = "https://cloud-images.ubuntu.com/mantic/current/${local.version}"
 }
 
+# resource "null_resource" "prepare_files" {
+#   depends_on = [data.external.versions]
+#   provisioner "remote-exec" {
+#     when = create
+#     connection {
+#       host     = var.PROXMOX_IP
+#       user     = var.PROXMOX_USERNAME
+#       password = var.PROXMOX_PASSWORD
+#     }
+
+#     inline = [
+#       "mkdir -p /var/lib/vz/snippets",
+#       "cd /root/ubuntu-template",
+#       "wget -O ubuntu.img ${local.iso_url}",
+#       "calculated_sha=$(sha256sum ubuntu.img | awk '{print $1}')",
+#       "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!!!!!\" && rm ubuntu.img && exit 1; fi"
+#     ]
+#   }
+
+#   provisioner "file" {
+#     when        = create
+#     source      = var.jumpbox_public_key
+#     destination = "/root/ubuntu-template/id_rsa.pub"
+#     connection {
+#       type     = "ssh"
+#       host     = var.PROXMOX_IP
+#       user     = var.PROXMOX_USERNAME
+#       password = var.PROXMOX_PASSWORD
+#     }
+#   }
+# }
+
 resource "null_resource" "create_template" {
-  depends_on = [
-    data.external.versions
-  ]
+  # depends_on = [null_resource.prepare_files]
+
   provisioner "remote-exec" {
     when = create
     connection {
@@ -115,11 +163,23 @@ resource "null_resource" "create_template" {
       password = var.PROXMOX_PASSWORD
     }
 
-    inline = [
-      "cd /var/lib/vz/template/iso",
-      "wget ${local.iso_url}",
-      "calculated_sha=$(sha512sum ${local.latest_version} | awk '{print $1}')",
-      "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!\" && rm ${local.latest_version} && exit 1; fi"
-    ]
+    script = "${path.root}/scripts/template.sh"
+  }
+}
+
+resource "proxmox_vm_qemu" "wg-jumpbox" {
+  depends_on  = [null_resource.create_template]
+  name        = "wg-jumpbox"
+  target_node = var.TARGET_NODE
+  memory      = var.jumpbox_memory
+  cores       = var.jumpbox_cores
+  agent       = 1
+  onboot      = var.jumpbox_power_onboot
+  bootdisk    = "scsi0"
+  clone       = "ubuntu-golden"
+  full_clone  = true
+  network {
+    model  = "virtio"
+    bridge = var.DEFAULT_BRIDGE
   }
 }
