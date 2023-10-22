@@ -1,6 +1,6 @@
 output "address" {
-  value       = proxmox_vm_qemu.node.network[0].macaddr
-  description = "MAC Address of the node"
+  value       = data.external.address.result["address"]
+  description = "IP Address of the node"
 }
 
 output "name" {

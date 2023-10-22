@@ -24,3 +24,9 @@ resource "proxmox_vm_qemu" "node" {
     bridge = var.default_bridge
   }
 }
+
+data "external" "address" {
+  depends_on  = [proxmox_vm_qemu.node]
+  working_dir = path.root
+  program     = ["bash", "scripts/ip.sh", "${lower(proxmox_vm_qemu.node.network[0].macaddr)}"]
+}
