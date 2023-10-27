@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.22.0"
     }
+    ansible = {
+      source = "ansible/ansible"
+      version = "1.1.0"
+    }
   }
 }
 
@@ -20,7 +24,7 @@ provider "proxmox" {
 
 # resource "aws_key_pair" "wg_key" {
 #   key_name   = "wg-keypair"
-#   public_key = file(var.ssh_public_key)
+#   public_key = file(var.gateway_public_key)
 #   tags = {
 #     Name = "WireGuard K8s Ingress"
 #   }
@@ -91,6 +95,17 @@ provider "proxmox" {
 #   }
 # }
 
+# resource "ansible_host" "gateway" {
+#   depends_on = [ aws_instance.wg_instance ]
+#   name   = aws_instance.wg_instance.name
+#   groups = ["gateway"]
+#   variables = {
+#     ansible_user                 = var.ami_username,
+#     ansible_ssh_private_key_file = var.gateway_private_key,
+#     ansible_python_interpreter   = "/usr/bin/python3",
+#   }
+# }
+
 resource "null_resource" "prepare_folders" {
   provisioner "remote-exec" {
     connection {
@@ -141,7 +156,7 @@ resource "null_resource" "prepare_files" {
 
   provisioner "file" {
     when        = create
-    source      = var.jumpbox_public_key
+    source      = var.proxy_public_key
     destination = "/root/ubuntu-template/id_rsa.pub"
     connection {
       type     = "ssh"
@@ -172,17 +187,45 @@ resource "time_sleep" "sleep" {
   create_duration = "30s"
 }
 
-module "master_domain" {
+module "wg_domain" {
 
   depends_on = [time_sleep.sleep]
 
   source         = "./modules/domain"
   count          = 1
-  name           = "wg-jumpbox"
-  memory         = var.jumpbox_memory
-  vcpus          = var.jumpbox_cores
-  sockets        = var.jumpbox_sockets
-  autostart      = var.jumpbox_power_onboot
+  name           = "wg-proxy"
+  memory         = var.proxy_memory
+  vcpus          = var.proxy_cores
+  sockets        = var.proxy_sockets
+  autostart      = var.proxy_power_onboot
   default_bridge = var.DEFAULT_BRIDGE
   target_node    = var.TARGET_NODE
+  private_key    = var.proxy_private_key
+}
+
+resource "ansible_host" "proxy" {
+  depends_on = [module.wg_domain]
+  name       = module.wg_domain.0.address
+  groups     = ["proxy"]
+  variables = {
+    ansible_user                 = "wg",
+    ansible_ssh_private_key_file = var.proxy_private_key,
+    ansible_python_interpreter   = "/usr/bin/python3",
+  }
+}
+
+resource "time_sleep" "host_entry_sleep" {
+  depends_on      = [ansible_host.proxy]
+  create_duration = "10s"
+}
+
+resource "ansible_playbook" "playbook" {
+  depends_on = [ time_sleep.host_entry_sleep ]
+  playbook   = "${path.module}/ansible/hello.yml"
+  name       = ansible_host.proxy.name
+  replayable = true
+}
+
+output "ansible_output" {
+  value = ansible_playbook.playbook.ansible_playbook_stdout
 }

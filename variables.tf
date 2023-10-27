@@ -30,8 +30,13 @@ variable "wireguard_port" {
   type = number
 }
 
-variable "ssh_public_key" {
+variable "gateway_public_key" {
   description = "Public Key file path to be used for SSH"
+  type = string
+}
+
+variable "gateway_private_key" {
+  description = "Private Key file path to be used for SSH"
   type = string
 }
 
@@ -76,28 +81,33 @@ variable "TEMPLATE_STORAGE" {
   type        = string
 }
 
-# Jump box config
-variable "jumpbox_public_key" {
-  description = "SSH public key that will be used to login to wg jumpbox"
+# proxy box config
+variable "proxy_public_key" {
+  description = "SSH public key that will be used to login to wg proxy"
   type        = string
 }
 
-variable "jumpbox_memory" {
-  description = "Jumpbox memory"
+variable "proxy_private_key" {
+  description = "SSH private key that will be used to login to wg proxy"
+  type        = string
+}
+
+variable "proxy_memory" {
+  description = "proxy memory"
   type        = number
 }
 
-variable "jumpbox_cores" {
-  description = "Jumpbox cpu cores"
+variable "proxy_cores" {
+  description = "proxy cpu cores"
   type        = number
 }
 
-variable "jumpbox_sockets" {
-  description = "Jumpbox cpu sockets"
+variable "proxy_sockets" {
+  description = "proxy cpu sockets"
   type        = number
 }
 
-variable "jumpbox_power_onboot" {
-  description = "Poweron jumpbox whenever host node powers on"
+variable "proxy_power_onboot" {
+  description = "Poweron proxy whenever host node powers on"
   type        = bool
 }

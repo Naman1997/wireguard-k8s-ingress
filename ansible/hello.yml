@@ -1,0 +1,9 @@
+---
+- name: Run Command and Print IP Addresses
+  hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Show host's ip
+      debug:
+        msg: "{{ ansible_ssh_host }}"

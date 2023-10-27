@@ -32,3 +32,8 @@ variable "target_node" {
   description = "Target node name in proxmox"
   type        = string
 }
+
+variable "private_key" {
+  description = "SSH private key that will be used to login to wg proxy"
+  type        = string
+}

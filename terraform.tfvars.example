@@ -8,12 +8,13 @@ ami_username = "ec2-user"
 # Instance config
 wireguard_port = 51820
 instance_type  = "t3.nano"
-ssh_public_key = "~/.ssh/id_rsa.pub"
+gateway_public_key = "~/.ssh/id_rsa.pub"
+gateway_private_key = "~/.ssh/id_rsa"
 user_data      = <<-EOF
   #!/bin/bash
   yum -y update
   amazon-linux-extras install epel
-  yum -y install wireguard-tools docker fail2ban
+  yum -y install wireguard-tools docker fail2ban python3
   systemctl enable docker
   systemctl start docker
   systemctl enable fail2ban
@@ -30,8 +31,9 @@ TARGET_NODE          = "pve"
 TEMPLATE_STORAGE     = "local"
 
 # Jump box config
-jumpbox_public_key      = "~/.ssh/id_rsa.pub"
-jumpbox_memory = 2048
-jumpbox_cores = 2
-jumpbox_sockets = 1
-jumpbox_power_onboot = true
+proxy_public_key      = "~/.ssh/id_rsa.pub"
+proxy_private_key      = "~/.ssh/id_rsa"
+proxy_memory = 2048
+proxy_cores = 2
+proxy_sockets = 1
+proxy_power_onboot = true
