@@ -1,0 +1,11 @@
+[Interface]
+Address = 10.1.0.1/24
+SaveConfig = true
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o {{ interface }} -j MASQUERADE;
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o {{ interface }} -j MASQUERADE;
+ListenPort = {{ wireguard_port }}
+PrivateKey = {{ private_key | trim }}
+
+[Peer]
+PublicKey = {{ public_key | trim }}
+AllowedIPs = 10.1.0.2/32

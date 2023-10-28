@@ -1,0 +1,107 @@
+---
+- name: Configure SSH
+  hosts: proxy,gateway
+  gather_facts: no
+
+  tasks:
+    - name: Remove conflicting IPs from known_hosts
+      shell: "ssh-keygen -R {{ hostvars[item].ansible_host }}"
+      delegate_to: localhost
+      run_once: yes
+      ignore_errors: yes
+      loop: "{{ groups['proxy'] + groups['gateway'] }}"
+
+    - name: Add hosts to known_hosts
+      shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
+      delegate_to: localhost
+      run_once: yes
+      loop: "{{ groups['proxy'] + groups['gateway'] }}"
+
+    - name: Check SSH connection
+      command: hostname
+
+- name: Install WireGuard on Proxy
+  hosts: proxy
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Install Wireguard
+      apt:
+        name: wireguard-tools
+        state: present
+
+- name: Install WireGuard on Gateway
+  hosts: gateway
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Install Wireguard
+      apt:
+        name: wireguard-tools
+        state: present
+
+- hosts: proxy
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Generate Wireguard keys on proxy
+      shell: "wg genkey | tee privatekey_proxy | wg pubkey > publickey_proxy"
+      args:
+        chdir: "/etc/wireguard"
+    - name: Get public key of proxy
+      slurp:
+        src: /etc/wireguard/publickey_proxy
+      register: public_key_proxy
+    - name: Get private key of proxy
+      slurp:
+        src: /etc/wireguard/privatekey_proxy
+      register: private_key_proxy
+
+- hosts: gateway
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Get internet-facing interface from gateway
+      shell: "ip route get 8.8.8.8 | awk '/dev/ { print $5 }'"
+      register: gateway_internet_interface
+    - name: Generate Wireguard keys
+      shell: "wg genkey | tee privatekey_gateway | wg pubkey > publickey_gateway"
+      args:
+        chdir: "/etc/wireguard"
+    - name: Get public key of gateway
+      slurp:
+        src: /etc/wireguard/publickey_gateway
+      register: public_key_gateway
+    - name: Get private key of gateway
+      slurp:
+        src: /etc/wireguard/privatekey_gateway
+      register: private_key_gateway
+
+- hosts: proxy
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Generate proxy wg0.conf file
+      template:
+        src: "wg0_proxy.conf.j2"
+        dest: "/etc/wireguard/wg0.conf"
+      vars:
+        public_key: "{{ hostvars.gateway.public_key_gateway['content'] | b64decode }}"
+        private_key: "{{ private_key_proxy['content'] | b64decode }}"
+    - name: Startup connection
+      shell: "wg-quick up wg0"
+
+- hosts: gateway
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Generate gateway wg0.conf file
+      template:
+        src: "wg0_gateway.conf.j2"
+        dest: "/etc/wireguard/wg0.conf"
+      vars:
+        public_key: "{{ hostvars.proxy.public_key_proxy['content'] | b64decode }}"
+        private_key: "{{ private_key_gateway['content'] | b64decode }}"
+        interface: "{{ gateway_internet_interface.stdout }}"
+    - name: Startup connection
+      shell: "wg-quick up wg0"

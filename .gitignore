@@ -33,3 +33,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 .terraform.lock.hcl
+
+# Custom files
+hosts
+vars.json
