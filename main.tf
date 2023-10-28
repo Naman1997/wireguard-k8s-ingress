@@ -8,10 +8,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.22.0"
     }
-    ansible = {
-      source = "ansible/ansible"
-      version = "1.1.0"
-    }
   }
 }
 
@@ -201,31 +197,4 @@ module "wg_domain" {
   default_bridge = var.DEFAULT_BRIDGE
   target_node    = var.TARGET_NODE
   private_key    = var.proxy_private_key
-}
-
-resource "ansible_host" "proxy" {
-  depends_on = [module.wg_domain]
-  name       = module.wg_domain.0.address
-  groups     = ["proxy"]
-  variables = {
-    ansible_user                 = "wg",
-    ansible_ssh_private_key_file = var.proxy_private_key,
-    ansible_python_interpreter   = "/usr/bin/python3",
-  }
-}
-
-resource "time_sleep" "host_entry_sleep" {
-  depends_on      = [ansible_host.proxy]
-  create_duration = "10s"
-}
-
-resource "ansible_playbook" "playbook" {
-  depends_on = [ time_sleep.host_entry_sleep ]
-  playbook   = "${path.module}/ansible/hello.yml"
-  name       = ansible_host.proxy.name
-  replayable = true
-}
-
-output "ansible_output" {
-  value = ansible_playbook.playbook.ansible_playbook_stdout
 }
