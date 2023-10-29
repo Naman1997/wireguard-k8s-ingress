@@ -65,11 +65,11 @@ resource "aws_security_group" "wg_sg" {
 }
 
 resource "aws_instance" "wg_instance" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  key_name      = aws_key_pair.wg_key.key_name
+  ami             = var.ami_id
+  instance_type   = var.instance_type
+  key_name        = aws_key_pair.wg_key.key_name
   security_groups = [aws_security_group.wg_sg.name]
-  user_data = var.user_data
+  user_data       = var.user_data
 
   root_block_device {
     volume_size = 8

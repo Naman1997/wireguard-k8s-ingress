@@ -15,8 +15,8 @@ resource "proxmox_vm_qemu" "node" {
   onboot      = var.autostart
   target_node = var.target_node
   scsihw      = "virtio-scsi-pci"
-  full_clone = true
-  clone      = "ubuntu-golden"
+  full_clone  = true
+  clone       = "ubuntu-golden"
 
   network {
     model  = "virtio"

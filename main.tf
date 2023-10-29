@@ -165,24 +165,22 @@ resource "null_resource" "execute_ansible_playbook" {
 }
 
 provider "docker" {
-  alias = "docker-remote-host"
-  host = "ssh://${local.gateway_user}@${local.gateway_ip}:22"
+  alias    = "remote"
+  host     = "ssh://${local.gateway_user}@${local.gateway_ip}:22"
+  ssh_opts = ["-i", "${var.gateway_private_key}"]
 }
 
 resource "docker_image" "duckdns" {
-  name = "linuxserver/duckdns:latest"
+  provider = docker.remote
+  name     = "lscr.io/linuxserver/duckdns:latest"
 }
 
 resource "docker_container" "duckdns" {
-
-  depends_on = [
-    null_resource.execute_ansible_playbook
-  ]
-
+  depends_on   = [null_resource.execute_ansible_playbook]
+  provider     = docker.remote
   image        = docker_image.duckdns.image_id
   name         = "duckdns"
   privileged   = false
-  attach       = false
   network_mode = "host"
   restart      = "unless-stopped"
   env = [
