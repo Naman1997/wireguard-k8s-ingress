@@ -19,7 +19,6 @@
         delay: 10
       vars:
         ansible_connection: local
-      loop: "{{ groups['proxy'] + groups['gateway'] }}"
 
     - name: Add hosts to known_hosts
       shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
@@ -100,7 +99,7 @@
   become: yes
   tasks:
     - name: Remove any older connection
-      shell: "wg-quick down wg0"
+      shell: "wg-quick down wg0 && sleep 5"
       ignore_errors: yes
     - name: Generate proxy wg0.conf file
       template:
@@ -110,14 +109,14 @@
         public_key: "{{ hostvars.gateway.public_key_gateway['content'] | b64decode }}"
         private_key: "{{ private_key_proxy['content'] | b64decode }}"
     - name: Startup connection
-      shell: "wg-quick up /etc/wireguard/wg0.conf"
+      shell: "wg-quick up wg0"
 
 - hosts: gateway
   gather_facts: no
   become: yes
   tasks:
     - name: Remove any older connection
-      shell: "wg-quick down wg0"
+      shell: "wg-quick down wg0 && sleep 5"
       ignore_errors: yes
     - name: Generate gateway wg0.conf file
       template:
@@ -128,4 +127,4 @@
         private_key: "{{ private_key_gateway['content'] | b64decode }}"
         interface: "{{ gateway_internet_interface.stdout }}"
     - name: Startup connection
-      shell: "wg-quick up /etc/wireguard/wg0.conf"
+      shell: "wg-quick up wg0"

@@ -8,10 +8,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.22.0"
     }
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "3.0.2"
-    }
   }
 }
 
@@ -74,7 +70,7 @@ resource "null_resource" "prepare_files" {
     inline = [
       "mkdir -p /var/lib/vz/snippets",
       "cd /root/ubuntu-template",
-      "[ ! -e ubuntu.img ] || [ \"${var.redownload_proxy_image}\" == true ] && wget -O ubuntu.img ${local.iso_url}",
+      "if [ ! -f ubuntu.img ] || [ \"${var.redownload_proxy_image}\" == \"true\" ]; then wget -O ubuntu.img ${local.iso_url}; fi",
       "calculated_sha=$(sha256sum ubuntu.img | awk '{print $1}')",
       "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!!!!!\" && rm ubuntu.img && exit 1; fi"
     ]
@@ -164,33 +160,35 @@ resource "null_resource" "execute_ansible_playbook" {
   }
 }
 
-provider "docker" {
-  alias    = "remote"
-  host     = "ssh://${local.gateway_user}@${local.gateway_ip}:22"
-  ssh_opts = ["-i", "${var.gateway_private_key}"]
-}
+# Does not work with dynamic ssh configs
+# provider "docker" {
+#   alias    = "remote"
+#   host     = "ssh://${local.gateway_user}@${local.gateway_ip}:22"
+#   ssh_opts = ["-i", "${var.gateway_private_key}"]
+# }
 
-resource "docker_image" "duckdns" {
-  provider = docker.remote
-  name     = "lscr.io/linuxserver/duckdns:latest"
-}
+# resource "docker_image" "duckdns" {
+#   depends_on = [null_resource.execute_ansible_playbook, module.gateway]
+#   provider   = docker.remote
+#   name       = "lscr.io/linuxserver/duckdns:latest"
+# }
 
-resource "docker_container" "duckdns" {
-  depends_on   = [null_resource.execute_ansible_playbook]
-  provider     = docker.remote
-  image        = docker_image.duckdns.image_id
-  name         = "duckdns"
-  privileged   = false
-  network_mode = "host"
-  restart      = "unless-stopped"
-  env = [
-    "SUBDOMAINS=${var.duckdns_domain}",
-    "TOKEN=${var.duckdns_token}",
-    "UPDATE_IP=ipv4",
-    "LOG_FILE=false"
-  ]
-  volumes {
-    container_path = "/config"
-    host_path      = "/home/${local.gateway_user}/duckdns"
-  }
-}
+# resource "docker_container" "duckdns" {
+#   depends_on   = [null_resource.execute_ansible_playbook]
+#   provider     = docker.remote
+#   image        = docker_image.duckdns.image_id
+#   name         = "duckdns"
+#   privileged   = false
+#   network_mode = "host"
+#   restart      = "unless-stopped"
+#   env = [
+#     "SUBDOMAINS=${var.duckdns_domain}",
+#     "TOKEN=${var.duckdns_token}",
+#     "UPDATE_IP=ipv4",
+#     "LOG_FILE=false"
+#   ]
+#   volumes {
+#     container_path = "/config"
+#     host_path      = "/home/${local.gateway_user}/duckdns"
+#   }
+# }
