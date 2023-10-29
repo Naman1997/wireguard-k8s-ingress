@@ -35,5 +35,5 @@ terraform.rc
 .terraform.lock.hcl
 
 # Custom files
-hosts
-vars.json
+ansible_hosts
+ansible_vars

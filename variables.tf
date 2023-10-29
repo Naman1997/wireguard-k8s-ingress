@@ -1,13 +1,13 @@
 # AWS config
 variable "region" {
   description = "AWS Region for this instance"
-  type = string
+  type        = string
 }
 
 # AMI config
 variable "ami_id" {
   description = "AMI to be used for this instance"
-  type = string
+  type        = string
   validation {
     condition     = can(regex("^ami-[0-9a-f]{8,17}$", var.ami_id))
     error_message = "AMI ID does not match the expected format (e.g., ami-0123456789abcdef0)."
@@ -16,7 +16,7 @@ variable "ami_id" {
 
 variable "ami_username" {
   description = "Username to be used for SSH"
-  type = string
+  type        = string
 }
 
 # Gateway config
@@ -27,37 +27,37 @@ variable "create_aws_instance" {
 
 variable "instance_type" {
   description = "AWS Instance Type"
-  type = string
+  type        = string
 }
 
 variable "wireguard_port" {
   description = "Port to be used for wireguard. This will add an ingress rule to the security group for the instance."
-  type = number
+  type        = number
 }
 
 variable "gateway_public_key" {
   description = "Public Key file path to be used for SSH"
-  type = string
+  type        = string
 }
 
 variable "gateway_private_key" {
   description = "Private Key file path to be used for SSH"
-  type = string
+  type        = string
 }
 
 variable "custom_gateway_ip" {
   description = "Private Key file path to be used for SSH"
-  type = string
+  type        = string
 }
 
 variable "custom_gateway_username" {
   description = "Private Key file path to be used for SSH"
-  type = string
+  type        = string
 }
 
 variable "aws_user_data" {
   description = "User Data for instance"
-  type = string
+  type        = string
 }
 
 # Proxmox config
@@ -96,7 +96,7 @@ variable "TEMPLATE_STORAGE" {
   type        = string
 }
 
-# proxy box config
+# Proxy config
 variable "proxy_public_key" {
   description = "SSH public key that will be used to login to wg proxy"
   type        = string
@@ -127,14 +127,30 @@ variable "proxy_power_onboot" {
   type        = bool
 }
 
+variable "redownload_proxy_image" {
+  description = "Re-downloads the ubuntu cloud image if set to true"
+  type        = bool
+}
+
 locals {
   # tflint-ignore: terraform_unused_declarations
   validate_versioning = (
-    var.create_aws_instance || 
+    var.create_aws_instance ||
     (can(
       regex(
-          "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$", var.custom_gateway_ip
-        )
+        "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$", var.custom_gateway_ip
+      )
     ) && var.custom_gateway_username != null && var.custom_gateway_username != "")
   ) ? true : tobool("Either create_aws_instance needs to be false or valid values are needed for custom_gateway_ip and custom_gateway_username")
+}
+
+# DuckDNS config
+variable "duckdns_domain" {
+  description = "DuckDNS domains that you wish to use on your ingress"
+  type        = string
+}
+
+variable "duckdns_token" {
+  description = "DuckDNS token that will be used to setup dynamic dns using https://hub.docker.com/r/linuxserver/duckdns"
+  type        = string
 }

@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.22.0"
     }
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "3.0.2"
+    }
   }
 }
 
@@ -32,14 +36,14 @@ module "gateway" {
 
 resource "null_resource" "prepare_folders" {
   provisioner "remote-exec" {
+    when = create
     connection {
       host        = var.PROXMOX_IP
       user        = var.PROXMOX_USERNAME
       private_key = file("~/.ssh/id_rsa")
     }
     inline = [
-      "rm -rf /root/ubuntu-template",
-      "mkdir /root/ubuntu-template"
+      "mkdir -p /root/ubuntu-template"
     ]
   }
 }
@@ -70,7 +74,7 @@ resource "null_resource" "prepare_files" {
     inline = [
       "mkdir -p /var/lib/vz/snippets",
       "cd /root/ubuntu-template",
-      "wget -O ubuntu.img ${local.iso_url}",
+      "[ ! -e ubuntu.img ] || [ \"${var.redownload_proxy_image}\" == true ] && wget -O ubuntu.img ${local.iso_url}",
       "calculated_sha=$(sha256sum ubuntu.img | awk '{print $1}')",
       "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!!!!!\" && rm ubuntu.img && exit 1; fi"
     ]
@@ -121,16 +125,74 @@ module "proxy" {
   private_key    = var.proxy_private_key
 }
 
+locals {
+  proxy_user   = "wg"
+  proxy_ip     = module.proxy.0.address
+  gateway_user = var.create_aws_instance ? var.ami_username : var.custom_gateway_username
+  gateway_ip   = var.create_aws_instance ? module.gateway.0.address : var.custom_gateway_ip
+}
+
 resource "local_file" "ansible_hosts" {
   depends_on = [module.gateway, module.proxy]
   filename   = "${path.module}/ansible_hosts"
   content = templatefile("${path.module}/templates/ansible_hosts.tpl", {
-    proxy_ip     = module.proxy.0.address,
-    proxy_user   = "wg",
+    proxy_ip     = local.proxy_ip,
+    proxy_user   = local.proxy_user,
     proxy_key    = var.proxy_private_key,
-    gateway_ip   = var.create_aws_instance ? module.gateway.0.address : var.custom_gateway_ip,
-    gateway_user = var.create_aws_instance ? var.ami_username : var.custom_gateway_username,
+    gateway_ip   = local.gateway_ip,
+    gateway_user = local.gateway_user,
     gateway_key  = var.gateway_private_key,
   })
 }
 
+resource "local_file" "ansible_vars" {
+  depends_on = [module.gateway, module.proxy]
+  filename   = "${path.module}/ansible_vars"
+  content = templatefile("${path.module}/templates/vars.tpl", {
+    duckdns_domain   = var.duckdns_domain,
+    proxy_ssh_user   = local.proxy_user,
+    gateway_ssh_user = local.gateway_user,
+    wireguard_port   = var.wireguard_port,
+  })
+}
+
+resource "null_resource" "execute_ansible_playbook" {
+  depends_on = [local_file.ansible_hosts, local_file.ansible_vars]
+  provisioner "local-exec" {
+    when    = create
+    command = "ansible-playbook ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible_vars\""
+  }
+}
+
+provider "docker" {
+  alias = "docker-remote-host"
+  host = "ssh://${local.gateway_user}@${local.gateway_ip}:22"
+}
+
+resource "docker_image" "duckdns" {
+  name = "linuxserver/duckdns:latest"
+}
+
+resource "docker_container" "duckdns" {
+
+  depends_on = [
+    null_resource.execute_ansible_playbook
+  ]
+
+  image        = docker_image.duckdns.image_id
+  name         = "duckdns"
+  privileged   = false
+  attach       = false
+  network_mode = "host"
+  restart      = "unless-stopped"
+  env = [
+    "SUBDOMAINS=${var.duckdns_domain}",
+    "TOKEN=${var.duckdns_token}",
+    "UPDATE_IP=ipv4",
+    "LOG_FILE=false"
+  ]
+  volumes {
+    container_path = "/config"
+    host_path      = "/home/${local.gateway_user}/duckdns"
+  }
+}

@@ -11,6 +11,16 @@
       ignore_errors: yes
       loop: "{{ groups['proxy'] + groups['gateway'] }}"
 
+    - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
+      ansible.builtin.wait_for:
+        port: 22
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+        search_regex: OpenSSH
+        delay: 10
+      vars:
+        ansible_connection: local
+      loop: "{{ groups['proxy'] + groups['gateway'] }}"
+
     - name: Add hosts to known_hosts
       shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
       delegate_to: localhost
@@ -29,6 +39,10 @@
       apt:
         name: wireguard-tools
         state: present
+      register: result
+      until: result is success
+      retries: 5
+      delay: 10
 
 - name: Install WireGuard on Gateway
   hosts: gateway
@@ -39,6 +53,10 @@
       yum:
         name: wireguard-tools
         state: present
+      register: result
+      until: result is success
+      retries: 5
+      delay: 10
 
 - hosts: proxy
   gather_facts: no
@@ -81,6 +99,9 @@
   gather_facts: no
   become: yes
   tasks:
+    - name: Remove any older connection
+      shell: "wg-quick down wg0"
+      ignore_errors: yes
     - name: Generate proxy wg0.conf file
       template:
         src: "wg0_proxy.conf.j2"
@@ -89,12 +110,15 @@
         public_key: "{{ hostvars.gateway.public_key_gateway['content'] | b64decode }}"
         private_key: "{{ private_key_proxy['content'] | b64decode }}"
     - name: Startup connection
-      shell: "wg-quick up wg0"
+      shell: "wg-quick up /etc/wireguard/wg0.conf"
 
 - hosts: gateway
   gather_facts: no
   become: yes
   tasks:
+    - name: Remove any older connection
+      shell: "wg-quick down wg0"
+      ignore_errors: yes
     - name: Generate gateway wg0.conf file
       template:
         src: "wg0_gateway.conf.j2"
@@ -104,4 +128,4 @@
         private_key: "{{ private_key_gateway['content'] | b64decode }}"
         interface: "{{ gateway_internet_interface.stdout }}"
     - name: Startup connection
-      shell: "wg-quick up wg0"
+      shell: "wg-quick up /etc/wireguard/wg0.conf"
