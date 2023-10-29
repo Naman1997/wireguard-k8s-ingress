@@ -18,89 +18,17 @@ provider "proxmox" {
   pm_tls_insecure = true
 }
 
-# resource "aws_key_pair" "wg_key" {
-#   key_name   = "wg-keypair"
-#   public_key = file(var.gateway_public_key)
-#   tags = {
-#     Name = "WireGuard K8s Ingress"
-#   }
-# }
-
-# resource "aws_security_group" "wg_sg" {
-#   name        = "wg-security-group"
-#   description = "wg security group for SSH, HTTP, HTTPS and WireGuard"
-
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#     description = "Allow all outbound traffic"
-#   }
-
-#   ingress {
-#     from_port   = 22
-#     to_port     = 22
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#     description = "SSH access"
-#   }
-
-#   ingress {
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#     description = "HTTP access"
-#   }
-
-#   ingress {
-#     from_port   = 443
-#     to_port     = 443
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#     description = "HTTPS access"
-#   }
-
-#   ingress {
-#     from_port   = var.wireguard_port
-#     to_port     = var.wireguard_port
-#     protocol    = "udp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#     description = "WireGuard access"
-#   }
-
-#   tags = {
-#     Name = "WireGuard K8s Ingress"
-#   }
-# }
-
-# resource "aws_instance" "wg_instance" {
-#   ami           = var.ami_id
-#   instance_type = var.instance_type
-#   key_name      = aws_key_pair.wg_key.key_name
-#   security_groups = [aws_security_group.wg_sg.name]
-#   user_data = var.user_data
-
-#   root_block_device {
-#     volume_size = 8
-#   }
-
-#   tags = {
-#     Name = "WireGuard K8s Ingress"
-#   }
-# }
-
-# resource "ansible_host" "gateway" {
-#   depends_on = [ aws_instance.wg_instance ]
-#   name   = aws_instance.wg_instance.name
-#   groups = ["gateway"]
-#   variables = {
-#     ansible_user                 = var.ami_username,
-#     ansible_ssh_private_key_file = var.gateway_private_key,
-#     ansible_python_interpreter   = "/usr/bin/python3",
-#   }
-# }
+# AWS module
+module "gateway" {
+  source              = "./modules/aws"
+  count               = var.create_aws_instance ? 1 : 0
+  ami_id              = var.ami_id
+  instance_type       = var.instance_type
+  wireguard_port      = var.wireguard_port
+  gateway_public_key  = var.gateway_public_key
+  gateway_private_key = var.gateway_private_key
+  user_data           = var.aws_user_data
+}
 
 resource "null_resource" "prepare_folders" {
   provisioner "remote-exec" {
@@ -109,7 +37,6 @@ resource "null_resource" "prepare_folders" {
       user        = var.PROXMOX_USERNAME
       private_key = file("~/.ssh/id_rsa")
     }
-
     inline = [
       "rm -rf /root/ubuntu-template",
       "mkdir /root/ubuntu-template"
@@ -140,7 +67,6 @@ resource "null_resource" "prepare_files" {
       user     = var.PROXMOX_USERNAME
       password = var.PROXMOX_PASSWORD
     }
-
     inline = [
       "mkdir -p /var/lib/vz/snippets",
       "cd /root/ubuntu-template",
@@ -165,7 +91,6 @@ resource "null_resource" "prepare_files" {
 
 resource "null_resource" "create_template" {
   depends_on = [null_resource.prepare_files]
-
   provisioner "remote-exec" {
     when = create
     connection {
@@ -173,7 +98,6 @@ resource "null_resource" "create_template" {
       user     = var.PROXMOX_USERNAME
       password = var.PROXMOX_PASSWORD
     }
-
     script = "${path.root}/scripts/template.sh"
   }
 }
@@ -183,10 +107,8 @@ resource "time_sleep" "sleep" {
   create_duration = "30s"
 }
 
-module "wg_domain" {
-
-  depends_on = [time_sleep.sleep]
-
+module "proxy" {
+  depends_on     = [time_sleep.sleep]
   source         = "./modules/domain"
   count          = 1
   name           = "wg-proxy"
@@ -198,3 +120,17 @@ module "wg_domain" {
   target_node    = var.TARGET_NODE
   private_key    = var.proxy_private_key
 }
+
+resource "local_file" "ansible_hosts" {
+  depends_on = [module.gateway, module.proxy]
+  filename   = "${path.module}/ansible_hosts"
+  content = templatefile("${path.module}/templates/ansible_hosts.tpl", {
+    proxy_ip     = module.proxy.0.address,
+    proxy_user   = "wg",
+    proxy_key    = var.proxy_private_key,
+    gateway_ip   = var.create_aws_instance ? module.gateway.0.address : var.custom_gateway_ip,
+    gateway_user = var.create_aws_instance ? var.ami_username : var.custom_gateway_username,
+    gateway_key  = var.gateway_private_key,
+  })
+}
+

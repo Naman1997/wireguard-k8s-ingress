@@ -19,7 +19,12 @@ variable "ami_username" {
   type = string
 }
 
-# Instance config
+# Gateway config
+variable "create_aws_instance" {
+  description = "Specifies if an AWS VM should be created for the gateway or not. Custom gateway settings cannot be empty if this is false."
+  type        = bool
+}
+
 variable "instance_type" {
   description = "AWS Instance Type"
   type = string
@@ -40,7 +45,17 @@ variable "gateway_private_key" {
   type = string
 }
 
-variable "user_data" {
+variable "custom_gateway_ip" {
+  description = "Private Key file path to be used for SSH"
+  type = string
+}
+
+variable "custom_gateway_username" {
+  description = "Private Key file path to be used for SSH"
+  type = string
+}
+
+variable "aws_user_data" {
   description = "User Data for instance"
   type = string
 }
@@ -110,4 +125,16 @@ variable "proxy_sockets" {
 variable "proxy_power_onboot" {
   description = "Poweron proxy whenever host node powers on"
   type        = bool
+}
+
+locals {
+  # tflint-ignore: terraform_unused_declarations
+  validate_versioning = (
+    var.create_aws_instance || 
+    (can(
+      regex(
+          "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$", var.custom_gateway_ip
+        )
+    ) && var.custom_gateway_username != null && var.custom_gateway_username != "")
+  ) ? true : tobool("Either create_aws_instance needs to be false or valid values are needed for custom_gateway_ip and custom_gateway_username")
 }

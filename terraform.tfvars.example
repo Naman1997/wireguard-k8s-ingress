@@ -5,12 +5,15 @@ region = "ap-south-2"
 ami_id       = "ami-05ee875a6841a8ca0"
 ami_username = "ec2-user"
 
-# Instance config
+# Gateway config
+create_aws_instance = false
 wireguard_port = 51820
 instance_type  = "t3.nano"
 gateway_public_key = "~/.ssh/id_rsa.pub"
 gateway_private_key = "~/.ssh/id_rsa"
-user_data      = <<-EOF
+custom_gateway_ip = "100.200.100.215"
+custom_gateway_username = "centos"
+aws_user_data      = <<-EOF
   #!/bin/bash
   yum -y update
   amazon-linux-extras install epel
@@ -30,7 +33,7 @@ DEFAULT_BRIDGE       = "vmbr0"
 TARGET_NODE          = "pve"
 TEMPLATE_STORAGE     = "local"
 
-# Jump box config
+# Proxy config
 proxy_public_key      = "~/.ssh/id_rsa.pub"
 proxy_private_key      = "~/.ssh/id_rsa"
 proxy_memory = 2048

@@ -36,7 +36,7 @@
   become: yes
   tasks:
     - name: Install Wireguard
-      apt:
+      yum:
         name: wireguard-tools
         state: present
 
