@@ -1,0 +1,56 @@
+---
+- name: Install Docker and run a container
+  hosts: gateway
+  become: yes
+  tasks:
+    - name: Update package cache (for yum)
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: Install required packages for Docker
+      package:
+        name:
+          - epel-release
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: Add Docker repository (for yum)
+      command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: Install Docker
+      package:
+        name: docker-ce
+        state: present
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: Pull Docker image
+      docker_image:
+        name: lscr.io/linuxserver/duckdns:latest
+        state: present
+
+    - name: Create Docker container
+      docker_container:
+        name: duckdns
+        image: lscr.io/linuxserver/duckdns:latest
+        detach: yes
+        net: host
+        environment:
+          SUBDOMAINS: "{{ duckdns_domain }}"
+          TOKEN: "{{ duckdns_token }}"
+          UPDATE_IP: "ipv4"
+          LOG_FILE: "false"
+        volumes:
+          - /home/{{gateway_ssh_user}}/duckdns:/config
+        restart_policy: unless-stopped

@@ -70,7 +70,7 @@ resource "null_resource" "prepare_files" {
     inline = [
       "mkdir -p /var/lib/vz/snippets",
       "cd /root/ubuntu-template",
-      "if [ ! -f ubuntu.img ] || [ \"${var.redownload_proxy_image}\" == \"true\" ]; then wget -O ubuntu.img ${local.iso_url}; fi",
+      "if [ ! -f ubuntu.img ] || [ \"${var.redownload_proxy_image}\" = true ]; then wget -O ubuntu.img \"${local.iso_url}\"; fi",
       "calculated_sha=$(sha256sum ubuntu.img | awk '{print $1}')",
       "if [ \"$calculated_sha\" != \"${local.sha}\" ]; then echo \"sha512 mismatch!!!!!\" && rm ubuntu.img && exit 1; fi"
     ]
@@ -156,39 +156,6 @@ resource "null_resource" "execute_ansible_playbook" {
   depends_on = [local_file.ansible_hosts, local_file.ansible_vars]
   provisioner "local-exec" {
     when    = create
-    command = "ansible-playbook ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible_vars\""
+    command = "ansible-playbook -v ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible_vars\""
   }
 }
-
-# Does not work with dynamic ssh configs
-# provider "docker" {
-#   alias    = "remote"
-#   host     = "ssh://${local.gateway_user}@${local.gateway_ip}:22"
-#   ssh_opts = ["-i", "${var.gateway_private_key}"]
-# }
-
-# resource "docker_image" "duckdns" {
-#   depends_on = [null_resource.execute_ansible_playbook, module.gateway]
-#   provider   = docker.remote
-#   name       = "lscr.io/linuxserver/duckdns:latest"
-# }
-
-# resource "docker_container" "duckdns" {
-#   depends_on   = [null_resource.execute_ansible_playbook]
-#   provider     = docker.remote
-#   image        = docker_image.duckdns.image_id
-#   name         = "duckdns"
-#   privileged   = false
-#   network_mode = "host"
-#   restart      = "unless-stopped"
-#   env = [
-#     "SUBDOMAINS=${var.duckdns_domain}",
-#     "TOKEN=${var.duckdns_token}",
-#     "UPDATE_IP=ipv4",
-#     "LOG_FILE=false"
-#   ]
-#   volumes {
-#     container_path = "/config"
-#     host_path      = "/home/${local.gateway_user}/duckdns"
-#   }
-# }
