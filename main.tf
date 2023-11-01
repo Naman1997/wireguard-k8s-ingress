@@ -130,7 +130,7 @@ locals {
 resource "local_file" "ansible_hosts" {
   depends_on = [module.gateway, module.proxy]
   filename   = "${path.module}/ansible_hosts"
-  content = templatefile("${path.module}/templates/ansible_hosts.tpl", {
+  content = templatefile("${path.module}/templates/ansible/ansible_hosts.template", {
     proxy_ip     = local.proxy_ip,
     proxy_user   = local.proxy_user,
     proxy_key    = var.proxy_private_key,
@@ -143,7 +143,7 @@ resource "local_file" "ansible_hosts" {
 resource "local_file" "ansible_vars" {
   depends_on = [module.gateway, module.proxy]
   filename   = "${path.module}/ansible_vars"
-  content = templatefile("${path.module}/templates/vars.tpl", {
+  content = templatefile("${path.module}/templates/ansible/vars.template", {
     duckdns_domain   = var.duckdns_domain,
     proxy_ssh_user   = local.proxy_user,
     gateway_ssh_user = local.gateway_user,
