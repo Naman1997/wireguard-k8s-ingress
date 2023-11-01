@@ -4,21 +4,6 @@ variable "region" {
   type        = string
 }
 
-# AMI config
-variable "ami_id" {
-  description = "AMI to be used for this instance"
-  type        = string
-  validation {
-    condition     = can(regex("^ami-[0-9a-f]{8,17}$", var.ami_id))
-    error_message = "AMI ID does not match the expected format (e.g., ami-0123456789abcdef0)."
-  }
-}
-
-variable "ami_username" {
-  description = "Username to be used for SSH"
-  type        = string
-}
-
 # Gateway config
 variable "create_aws_instance" {
   description = "Specifies if an AWS VM should be created for the gateway or not. Custom gateway settings cannot be empty if this is false."

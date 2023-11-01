@@ -22,7 +22,6 @@ provider "proxmox" {
 module "gateway" {
   source              = "./modules/aws"
   count               = var.create_aws_instance ? 1 : 0
-  ami_id              = var.ami_id
   instance_type       = var.instance_type
   wireguard_port      = var.wireguard_port
   gateway_public_key  = var.gateway_public_key
@@ -124,7 +123,7 @@ module "proxy" {
 locals {
   proxy_user   = "wg"
   proxy_ip     = module.proxy.0.address
-  gateway_user = var.create_aws_instance ? var.ami_username : var.custom_gateway_username
+  gateway_user = var.create_aws_instance ? "ubuntu" : var.custom_gateway_username
   gateway_ip   = var.create_aws_instance ? module.gateway.0.address : var.custom_gateway_ip
 }
 

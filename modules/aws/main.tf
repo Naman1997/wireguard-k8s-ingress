@@ -7,11 +7,24 @@ terraform {
   }
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["099720109477"] # Canonical
+}
+
 resource "aws_key_pair" "wg_key" {
   key_name   = "wg-keypair"
   public_key = file(var.gateway_public_key)
   tags = {
-    Name = "WireGuard K8s Ingress"
+    Name = "WireGuard K8s Gateway"
   }
 }
 
@@ -60,12 +73,12 @@ resource "aws_security_group" "wg_sg" {
   }
 
   tags = {
-    Name = "WireGuard K8s Ingress"
+    Name = "WireGuard K8s Gateway"
   }
 }
 
 resource "aws_instance" "wg_instance" {
-  ami             = var.ami_id
+  ami             = data.aws_ami.ubuntu.id
   instance_type   = var.instance_type
   key_name        = aws_key_pair.wg_key.key_name
   security_groups = [aws_security_group.wg_sg.name]
@@ -76,6 +89,6 @@ resource "aws_instance" "wg_instance" {
   }
 
   tags = {
-    Name = "WireGuard K8s Ingress"
+    Name = "WireGuard K8s Gateway"
   }
 }
