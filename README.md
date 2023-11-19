@@ -1,6 +1,6 @@
 # wireguard-k8s-ingress
 
-## This repo is a WIP.
+## This repo is a WIP and is currently on pause due to this [issue](https://github.com/Telmate/terraform-provider-proxmox/issues/863) in the terraform provider.
 
 ## Hardware Requirements
 
@@ -36,3 +36,102 @@ wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address> endpoint <en
 https://github.com/joncombe/docker-nginx-letsencrypt-setup/tree/main [Probably need to see if this can work with stable-alpine image tag]
 
 https://hub.docker.com/r/linuxserver/duckdns [docker-compose section]
+
+
+
+```
+# Run docker compose with env vars
+UID="$(id -u)" GID="$(id -g)" SUBDOMAIN="${domain}" docker-compose up
+
+```
+
+Nginx configuration:
+
+```
+# Install packages - skipping this step for cert-manager within k8s
+# sudo apt install python3-certbot-nginx nginx -y
+
+# Update /etc/nginx/sites-available/default on the vps node with this:
+
+server { 
+    server_name namansoracleapps.duckdns.org;
+    listen 80;
+    location / {
+        proxy_pass http://10.1.0.2;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server { 
+    server_name namansoracleapps.duckdns.org;
+    listen 443;
+    location / {
+        proxy_pass https://10.1.0.2;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Restart nginx
+sudo systemctl restart nginx
+
+# Use certbot to update the config as well as the cert and key paths - skipping this step for cert-manager within k8s
+# sudo certbot --nginx --non-interactive --agree-tos --email <email> -d <domain> --test-cert # Remove test-cert for live cert
+
+# Update /etc/nginx/sites-available/default on the relay node with this:
+upstream backend {
+    server 192.168.0.116;
+    server 192.168.0.117;
+    server 192.168.0.118;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443;
+
+    location / {
+        proxy_pass https://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Restart nginx
+sudo systemctl restart nginx
+
+# Install nginx ingress controller and apply the ingress yaml file
+kubectl label ns ingress-nginx pod-security.kubernetes.io/enforce=privileged # Needed for a talos cluster
+# Edit the external lb IP in the values file 
+vim ./nginx-example/nginx-controller.yaml
+helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --values ./nginx-example/nginx-controller.yaml --create-namespace
+kubectl create deployment nginx --image=nginx --replicas=5
+k expose deploy nginx --port 80
+# Edit this config to point to your domain
+vim ./nginx-example/ingress.yaml
+k create -f ./nginx-example/ingress.yaml
+```
+
+Debug and restart for nginx
+
+```
+sudo nginx -t
+sudo systemctl restart nginx
+```

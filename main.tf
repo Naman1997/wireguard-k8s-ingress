@@ -151,7 +151,15 @@ resource "local_file" "ansible_vars" {
   })
 }
 
-resource "null_resource" "execute_ansible_playbook" {
+resource "null_resource" "setup_wireguard_connection" {
+  depends_on = [local_file.ansible_hosts, local_file.ansible_vars]
+  provisioner "local-exec" {
+    when    = create
+    command = "ansible-playbook -v ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible_vars\""
+  }
+}
+
+resource "null_resource" "setup_duckdns" {
   depends_on = [local_file.ansible_hosts, local_file.ansible_vars]
   provisioner "local-exec" {
     when    = create
