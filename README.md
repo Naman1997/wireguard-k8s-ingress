@@ -1,6 +1,6 @@
 # wireguard-k8s-ingress
 
-## This repo is a WIP and is currently on pause due to this [issue](https://github.com/Telmate/terraform-provider-proxmox/issues/863) in the terraform provider.
+## This repo is a WIP.
 
 ## Hardware Requirements
 
