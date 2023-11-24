@@ -1,0 +1,5 @@
+{
+    "gateway_subdomain": "${gateway_duckdns_subdomain}",
+    "proxy_subdomain": "${proxy_duckdns_subdomain}",
+    "token": "${duckdns_token}",
+}

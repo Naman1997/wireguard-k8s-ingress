@@ -1,0 +1,22 @@
+---
+- hosts: proxy
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Run the equivalent of "apt-get update" as a separate step
+      apt:
+        update_cache: yes
+    - name: Add specified repository into sources list
+      ansible.builtin.apt_repository:
+        repo: deb http://archive.ubuntu.com/ubuntu mantic universe
+        state: present
+    - name: Run the equivalent of "apt-get update" as a separate step
+      apt:
+        update_cache: yes
+    - name: install qemu guest agent
+      apt:
+        name: qemu-guest-agent
+        state: present
+    - name: Upgrade the OS
+      apt:
+        upgrade: yes

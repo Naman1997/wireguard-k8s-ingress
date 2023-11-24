@@ -1,0 +1,32 @@
+---
+- name: Configure unattended-upgrades
+  hosts: all
+  become: yes
+  tasks:
+    - name: "Install unattended-upgrades"
+      apt:
+        pkg: "unattended-upgrades"
+        state: "present"
+
+    # ref. https://wiki.debian.org/UnattendedUpgrades
+    - name: "Create apt file that would be made by interactive dpkg-reconfigure"
+      file:
+        path: "/etc/apt/apt.conf.d/20auto-upgrades"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+        state: "touch"
+    - name: "Populate 20auto-upgrades apt file"
+      lineinfile:
+        dest: "/etc/apt/apt.conf.d/20auto-upgrades"
+        line: '{{item}}'
+      with_items:
+        - 'APT::Periodic::Update-Package-Lists "1";'
+        - 'APT::Periodic::Unattended-Upgrade "1";'
+
+    # ref. https://help.ubuntu.com/community/Lubuntu/Documentation/RemoveOldKernels#Shell
+    - name: "Enable remove unused deps in /etc/apt/apt.conf.d/50unattended-upgrades"
+      lineinfile:
+        dest: "/etc/apt/apt.conf.d/50unattended-upgrades"
+        line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";'
+        insertafter: '^//Unattended-Upgrade::Remove-Unused-Dependencies'

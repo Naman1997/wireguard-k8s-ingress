@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     proxmox = {
-      source  = "telmate/proxmox"
-      version = "2.9.14"
+      source  = "bpg/proxmox"
+      version = "0.38.1"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -12,10 +12,10 @@ terraform {
 }
 
 provider "proxmox" {
-  pm_api_url      = var.PROXMOX_API_ENDPOINT
-  pm_user         = "${var.PROXMOX_USERNAME}@pam"
-  pm_password     = var.PROXMOX_PASSWORD
-  pm_tls_insecure = true
+  endpoint = var.PROXMOX_API_ENDPOINT
+  username = "${var.PROXMOX_USERNAME}@pam"
+  password = var.PROXMOX_PASSWORD
+  insecure = true
 }
 
 # AWS module
@@ -140,29 +140,56 @@ resource "local_file" "ansible_hosts" {
   })
 }
 
-resource "local_file" "ansible_vars" {
+resource "local_file" "wireguard_vars" {
   depends_on = [module.gateway, module.proxy]
-  filename   = "${path.module}/ansible_vars"
-  content = templatefile("${path.module}/templates/ansible/vars.template", {
-    duckdns_domain   = var.duckdns_domain,
+  filename   = "${path.module}/ansible/wireguard_vars"
+  content = templatefile("${path.module}/templates/ansible/wireguard_vars.template", {
+    duckdns_domain   = var.gateway_duckdns_subdomain,
     proxy_ssh_user   = local.proxy_user,
     gateway_ssh_user = local.gateway_user,
     wireguard_port   = var.wireguard_port,
   })
 }
 
+resource "local_file" "duckdns_vars" {
+  depends_on = [module.gateway, module.proxy]
+  filename   = "${path.module}/ansible/duckdns_vars"
+  content = templatefile("${path.module}/templates/ansible/duckdns_vars.template", {
+    gateway_duckdns_subdomain = var.gateway_duckdns_subdomain,
+    proxy_duckdns_subdomain   = var.proxy_duckdns_subdomain,
+    duckdns_token             = var.duckdns_token,
+  })
+}
+
 resource "null_resource" "setup_wireguard_connection" {
-  depends_on = [local_file.ansible_hosts, local_file.ansible_vars]
+  depends_on = [local_file.ansible_hosts, local_file.wireguard_vars]
   provisioner "local-exec" {
     when    = create
-    command = "ansible-playbook -v ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible_vars\""
+    command = "ansible-playbook -v ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible/wireguard_vars\""
   }
 }
 
-resource "null_resource" "setup_duckdns" {
-  depends_on = [local_file.ansible_hosts, local_file.ansible_vars]
+resource "null_resource" "setup_unattended_upgrades" {
+  depends_on = [null_resource.setup_wireguard_connection]
   provisioner "local-exec" {
     when    = create
-    command = "ansible-playbook -v ansible/1-wireguard.yml -i ansible_hosts -e \"@ansible_vars\""
+    command = "ansible-playbook -v ansible/2-unattended-upgrades.yml -i ansible_hosts"
   }
 }
+
+# FIXME
+# resource "null_resource" "setup_qmeu_guest_agent" {
+#   depends_on = [null_resource.setup_unattended_upgrades]
+#   provisioner "local-exec" {
+#     when    = create
+#     command = "ansible-playbook -v ansible/3-qemu-guest-agent.yml -i ansible_hosts"
+#   }
+# }
+
+# resource "null_resource" "setup_duckdns" {
+#   depends_on = [null_resource.setup_qmeu_guest_agent, local_file.duckdns_vars]
+#   provisioner "local-exec" {
+#     when    = create
+#     command = "ansible-playbook -v ansible/4-duckdns.yml -i ansible_hosts -e \"@ansible/duckdns_vars\""
+#   }
+# }

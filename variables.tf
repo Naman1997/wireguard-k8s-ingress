@@ -130,8 +130,13 @@ locals {
 }
 
 # DuckDNS config
-variable "duckdns_domain" {
-  description = "DuckDNS domains that you wish to use on your ingress"
+variable "gateway_duckdns_subdomain" {
+  description = "DuckDNS domain that you wish to use for dynamic dns on the vps"
+  type        = string
+}
+
+variable "proxy_duckdns_subdomain" {
+  description = "DuckDNS domain that you wish to use for dynamic dns on the local proxy vm"
   type        = string
 }
 

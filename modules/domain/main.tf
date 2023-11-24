@@ -1,31 +1,47 @@
 terraform {
   required_providers {
     proxmox = {
-      source  = "telmate/proxmox"
-      version = "2.9.14"
+      source  = "bpg/proxmox"
+      version = "0.38.1"
     }
   }
 }
 
-resource "proxmox_vm_qemu" "node" {
-  name        = var.name
-  memory      = var.memory
-  cores       = var.vcpus
-  sockets     = var.sockets
-  onboot      = var.autostart
-  target_node = var.target_node
-  scsihw      = "virtio-scsi-pci"
-  full_clone  = true
-  clone       = "ubuntu-golden"
+resource "proxmox_virtual_environment_vm" "node" {
+  name                = var.name
+  on_boot             = var.autostart
+  node_name           = var.target_node
+  scsi_hardware       = "virtio-scsi-pci"
+  timeout_shutdown_vm = 300
 
-  network {
-    model  = "virtio"
+  memory {
+    dedicated = var.memory
+  }
+
+  cpu {
+    cores   = var.vcpus
+    type    = "host"
+    sockets = var.sockets
+  }
+
+  agent {
+    enabled = true
+    timeout = "10s"
+  }
+
+  clone {
+    retries = 3
+    vm_id   = 6000
+  }
+
+  network_device {
+    model  = "e1000"
     bridge = var.default_bridge
   }
 }
 
 data "external" "address" {
-  depends_on  = [proxmox_vm_qemu.node]
+  depends_on  = [proxmox_virtual_environment_vm.node]
   working_dir = path.root
-  program     = ["bash", "scripts/ip.sh", "${lower(proxmox_vm_qemu.node.network[0].macaddr)}"]
+  program     = ["bash", "scripts/ip.sh", "${lower(proxmox_virtual_environment_vm.node.network_device[0].mac_address)}"]
 }
