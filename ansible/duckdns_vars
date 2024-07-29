@@ -1,5 +1,0 @@
-{
-    "gateway_subdomain": "wg-ingress.duckdns.org",
-    "proxy_subdomain": "wg-proxy.duckdns.org",
-    "token": "3e4295e6-2037-40bc-90ce-68d953a769a4",
-}

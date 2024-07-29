@@ -37,3 +37,4 @@ terraform.rc
 # Custom files
 ansible_hosts
 ansible_vars
+ansible/duckdns_vars
