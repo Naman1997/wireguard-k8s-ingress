@@ -74,7 +74,7 @@
       ignore_errors: yes
     - name: Generate proxy wg0.conf file
       template:
-        src: "../templates/ansible/wg0_proxy.conf.template"
+        src: "../templates/wireguard/wg0_proxy.conf.template"
         dest: "/etc/wireguard/wg0.conf"
       vars:
         public_key: "{{ hostvars.gateway.public_key_gateway['content'] | b64decode }}"
@@ -92,7 +92,7 @@
       ignore_errors: yes
     - name: Generate gateway wg0.conf file
       template:
-        src: "../templates/ansible/wg0_gateway.conf.template"
+        src: "../templates/wireguard/wg0_gateway.conf.template"
         dest: "/etc/wireguard/wg0.conf"
       vars:
         public_key: "{{ hostvars.proxy.public_key_proxy['content'] | b64decode }}"

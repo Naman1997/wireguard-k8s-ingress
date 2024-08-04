@@ -32,31 +32,8 @@ Nginx configuration on VPS:
 # Install packages - skipping this step for cert-manager within k8s
 # sudo apt install python3-certbot-nginx nginx -y
 
-# Update /etc/nginx/sites-available/default on the vps node with this:
-
-server { 
-    server_name namansoracleapps.duckdns.org;
-    listen 80;
-    location / {
-        proxy_pass http://10.1.0.2;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-
-server { 
-    server_name namansoracleapps.duckdns.org;
-    listen 443;
-    location / {
-        proxy_pass https://10.1.0.2;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+# Update /etc/nginx/sites-available/default
+### File under templates/nginx/gateway.template ###
 
 # Restart nginx
 sudo systemctl restart nginx
@@ -68,36 +45,11 @@ sudo systemctl restart nginx
 Nginx configuration on local VM:
 
 ```
-# Update /etc/nginx/sites-available/default on the relay node with this:
-upstream backend {
-    server 192.168.0.116;
-    server 192.168.0.117;
-    server 192.168.0.118;
-}
+# Find the IP addresses of all the worker VMs
+kubectl get nodes -l node-role.kubernetes.io/master!=true,node-role.kubernetes.io/controlplane!=true -o=jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
 
-server {
-    listen 80;
-
-    location / {
-        proxy_pass http://backend;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-
-server {
-    listen 443;
-
-    location / {
-        proxy_pass https://backend;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+# Update /etc/nginx/sites-available/default
+### File under templates/nginx/gateway.template ###
 
 # Restart nginx
 sudo systemctl restart nginx
