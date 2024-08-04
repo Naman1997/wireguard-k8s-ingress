@@ -16,40 +16,11 @@
     - ~~Check if we're able to SSH into both VMs without any password~~
     - ~~This should also run the `ansible-galaxy collection install community.docker` command~~
 - ~~Run another script under a separate section in the Makefile (make setup) to start running the ansible scripts to setup the VMs.~~
-- Run another script to now install and setup nginx on both VMs and copy the right templates on both VMs. Restart nginx once files have been copied. This script will also need to figure out the IP addresses of all the worker nodes in the kubernetes cluster so that we can update in the config.
+- ~~Run another script to now install and setup nginx on both VMs and copy the right templates on both VMs. Restart nginx once files have been copied. This script will also need to figure out the IP addresses of all the worker nodes in the kubernetes cluster so that we can update in the config.~~
 - Run one last script to install the ingress object. And print an example on how to expose nginx to the domain.
 
 
 # Pending sections
-
-Nginx configuration on VPS:
-
-```
-# Install packages - skipping this step for cert-manager within k8s
-# sudo apt install python3-certbot-nginx nginx -y
-
-# Update /etc/nginx/sites-available/default
-### File under templates/nginx/gateway.template ###
-
-# Restart nginx
-sudo systemctl restart nginx
-
-# Use certbot to update the config as well as the cert and key paths - skipping this step for cert-manager within k8s
-# sudo certbot --nginx --non-interactive --agree-tos --email <email> -d <domain> --test-cert # Remove test-cert for live cert
-```
-
-Nginx configuration on local VM:
-
-```
-# Find the IP addresses of all the worker VMs
-kubectl get nodes -l node-role.kubernetes.io/master!=true,node-role.kubernetes.io/controlplane!=true -o=jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
-
-# Update /etc/nginx/sites-available/default
-### File under templates/nginx/gateway.template ###
-
-# Restart nginx
-sudo systemctl restart nginx
-```
 
 Steps for localhost:
 

@@ -1,8 +1,17 @@
 upstream backend {
-    {% for node in nodes.stdout_lines %}
-    server {{ node }};
-    {% endfor %}
-}
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+        server ${node};
+    }
 
 server {
     listen 80;
