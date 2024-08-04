@@ -11,10 +11,11 @@
 ## Rough structure
 
 - We're assuming that the user has prepared a VPS and a local VM that is in the same subnet as the k8s cluster. Both VMs can be accessed without any password (passwordless authentication using SSH keys).
-- Run some sort of script using a Makefile (make check) that can take in the ansible_host file and check a couple things:
-    - Check if localhost has access to a cluster
-    - Check if we're able to SSH into both VMs without any password
-- Run another script under a separate section in the Makefile (make setup) to start running the ansible scripts to setup the VMs. This should also run the `ansible-galaxy collection install community.docker` command before starting.
+- ~~Run some sort of script using a Makefile (make check) that can take in the ansible_host file and check a couple things~~:
+    - ~~Check if localhost has access to a cluster~~
+    - ~~Check if we're able to SSH into both VMs without any password~~
+    - ~~This should also run the `ansible-galaxy collection install community.docker` command~~
+- ~~Run another script under a separate section in the Makefile (make setup) to start running the ansible scripts to setup the VMs.~~
 - Run another script to now install and setup nginx on both VMs and copy the right templates on both VMs. Restart nginx once files have been copied. This script will also need to figure out the IP addresses of all the worker nodes in the kubernetes cluster so that we can update in the config.
 - Run one last script to install the ingress object. And print an example on how to expose nginx to the domain.
 
