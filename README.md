@@ -22,11 +22,6 @@
 
 # Pending sections
 
-Make sure to install the docker module before running the duckdns playbook
-```
-ansible-galaxy collection install community.docker
-```
-
 Nginx configuration on VPS:
 
 ```
