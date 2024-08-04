@@ -1,0 +1,14 @@
+---
+- name: Configure gateway
+  hosts: gateway
+  tasks:
+    - name: Create a data container
+      become: yes
+      community.docker.docker_container:
+        name: duckdns
+        image: lscr.io/linuxserver/duckdns:latest
+        restart_policy: "unless-stopped"
+        env:
+          UPDATE_IP: "true"
+          SUBDOMAINS: "{{ gateway_subdomain }}"
+          TOKEN: "{{ token }}"

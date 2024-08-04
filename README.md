@@ -45,6 +45,11 @@ UID="$(id -u)" GID="$(id -g)" SUBDOMAIN="${domain}" docker-compose up
 
 ```
 
+Make sure to install the docker module before running the duckdns playbook
+```
+ansible-galaxy collection install community.docker
+```
+
 Nginx configuration:
 
 ```
@@ -121,6 +126,7 @@ sudo systemctl restart nginx
 kubectl label ns ingress-nginx pod-security.kubernetes.io/enforce=privileged # Needed for a talos cluster
 # Edit the external lb IP in the values file 
 vim ./nginx-example/nginx-controller.yaml
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --values ./nginx-example/nginx-controller.yaml --create-namespace
 kubectl create deployment nginx --image=nginx --replicas=5
 k expose deploy nginx --port 80
