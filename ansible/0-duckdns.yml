@@ -2,7 +2,7 @@
 - name: Configure gateway
   hosts: gateway
   tasks:
-    - name: Create a data container
+    - name: Create a duckdns container
       become: yes
       community.docker.docker_container:
         name: duckdns

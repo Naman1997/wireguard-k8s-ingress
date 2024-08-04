@@ -10,47 +10,23 @@
 
 ## Rough structure
 
-- Create a small cloud vm in AWS and install wireguard, docker & fail2ban using user-data
-- Create proxmox vm in Proxmox to be used as ingress endpoints (externalIPs) for the cluster
-- Wait for ssh to the cloud vm and proxmox vm
-- On the cloud vm: Run `scripts/init.sh` (probably need to modify this) (null resource)
-- On the proxmox vm: Run `scripts/create-wg-connections.sh` (maybe part of lxc module) (change logic for LAST_OCTET - use index of the lxc resource for this value)
-- Test the wireguard connection
-- On the cloud vm:
-    - Figure out the `UUID` and `PGID` of the user
-    - Set up these docker containers:
-        - DuckDNS container for ddns (use docker-compose)
-        - WatchTower to always keep containers up to date (can be configured to not be added) (staging v/s prod ingress can differ here)
-        - Nginx container to proxy domain names to route ingress traffic for duckdns subdomains to the wireguard IPs
-        - Certbot for ssl certs for each domain
-- On the host(?) run helm install to install k8s ingress with externalIPs of the proxmox vm
+- We're assuming that the user has prepared a VPS and a local VM that is in the same subnet as the k8s cluster. Both VMs can be accessed without any password (passwordless authentication using SSH keys).
+- Run some sort of script using a Makefile (make check) that can take in the ansible_host file and check a couple things:
+    - Check if localhost has access to a cluster
+    - Check if we're able to SSH into both VMs without any password
+- Run another script under a separate section in the Makefile (make setup) to start running the ansible scripts to setup the VMs. This should also run the `ansible-galaxy collection install community.docker` command before starting.
+- Run another script to now install and setup nginx on both VMs and copy the right templates on both VMs. Restart nginx once files have been copied. This script will also need to figure out the IP addresses of all the worker nodes in the kubernetes cluster so that we can update in the config.
+- Run one last script to install the ingress object. And print an example on how to expose nginx to the domain.
 
 
-# Useful commands/docs
-```
-sudo systemctl enable wg-quick@wg0.service
-sudo wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address>
-wg set wg0 peer <Peer's public key> allowed-ips <Peer's IP address> endpoint <endpoint domain>:<port> persistent-keepalive 25
-```
-
-https://github.com/joncombe/docker-nginx-letsencrypt-setup/tree/main [Probably need to see if this can work with stable-alpine image tag]
-
-https://hub.docker.com/r/linuxserver/duckdns [docker-compose section]
-
-
-
-```
-# Run docker compose with env vars
-UID="$(id -u)" GID="$(id -g)" SUBDOMAIN="${domain}" docker-compose up
-
-```
+# Pending sections
 
 Make sure to install the docker module before running the duckdns playbook
 ```
 ansible-galaxy collection install community.docker
 ```
 
-Nginx configuration:
+Nginx configuration on VPS:
 
 ```
 # Install packages - skipping this step for cert-manager within k8s
@@ -87,7 +63,11 @@ sudo systemctl restart nginx
 
 # Use certbot to update the config as well as the cert and key paths - skipping this step for cert-manager within k8s
 # sudo certbot --nginx --non-interactive --agree-tos --email <email> -d <domain> --test-cert # Remove test-cert for live cert
+```
 
+Nginx configuration on local VM:
+
+```
 # Update /etc/nginx/sites-available/default on the relay node with this:
 upstream backend {
     server 192.168.0.116;
@@ -121,7 +101,11 @@ server {
 
 # Restart nginx
 sudo systemctl restart nginx
+```
 
+Steps for localhost:
+
+```
 # Install nginx ingress controller and apply the ingress yaml file
 kubectl label ns ingress-nginx pod-security.kubernetes.io/enforce=privileged # Needed for a talos cluster
 # Edit the external lb IP in the values file 

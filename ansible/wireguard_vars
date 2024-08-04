@@ -1,6 +1,5 @@
 {
     "duckdns_domain": "wg-ingress.duckdns.org",
     "gateway_ssh_user": "ubuntu",
-    "proxy_ssh_user": "wg",
     "wireguard_port": "60000"
 }

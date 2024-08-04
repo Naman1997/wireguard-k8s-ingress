@@ -5,7 +5,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: wg-ingress.duckdns.org
+  - host: example.duckdns.org
     http:
       paths:
       - path: /

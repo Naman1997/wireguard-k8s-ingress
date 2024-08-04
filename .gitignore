@@ -2,3 +2,4 @@
 ansible_hosts
 ansible_vars
 ansible/duckdns_vars
+ansible/wireguard_vars
