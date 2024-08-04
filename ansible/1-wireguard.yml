@@ -3,27 +3,27 @@
   hosts: all
   gather_facts: no
   tasks:
-    - name: Remove conflicting IPs from known_hosts
-      shell: "ssh-keygen -R {{ hostvars[item].ansible_host }}"
-      delegate_to: localhost
-      run_once: yes
-      ignore_errors: yes
-      loop: "{{ groups['proxy'] + groups['gateway'] }}"
-    - name: Add hosts to known_hosts
-      shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
-      delegate_to: localhost
-      run_once: yes
-      loop: "{{ groups['proxy'] + groups['gateway'] }}"
-    - name: Wait for system to become reachable
-      ansible.builtin.wait_for_connection:
-        timeout: 900
-    - name: Gather facts for first time
-      ansible.builtin.setup:
-    - name: Check SSH connection
-      command: hostname
+    # - name: Remove conflicting IPs from known_hosts
+    #   shell: "ssh-keygen -R {{ hostvars[item].ansible_host }}"
+    #   delegate_to: localhost
+    #   run_once: yes
+    #   ignore_errors: yes
+    #   loop: "{{ groups['proxy'] + groups['gateway'] }}"
+    # - name: Add hosts to known_hosts
+    #   shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
+    #   delegate_to: localhost
+    #   run_once: yes
+    #   loop: "{{ groups['proxy'] + groups['gateway'] }}"
+    # - name: Wait for system to become reachable
+    #   ansible.builtin.wait_for_connection:
+    #     timeout: 900
+    # - name: Gather facts for first time
+    #   ansible.builtin.setup:
+    # - name: Check SSH connection
+    #   command: hostname
     - name: Install Wireguard
       become: yes
-      apt:
+      ansible.builtin.package:
         name: wireguard-tools
         state: present
       register: result
@@ -74,7 +74,7 @@
       ignore_errors: yes
     - name: Generate proxy wg0.conf file
       template:
-        src: "../templates/ansible/wg0_proxy.conf.template"
+        src: "../templates/wireguard/wg0_proxy.conf.template"
         dest: "/etc/wireguard/wg0.conf"
       vars:
         public_key: "{{ hostvars.gateway.public_key_gateway['content'] | b64decode }}"
@@ -92,7 +92,7 @@
       ignore_errors: yes
     - name: Generate gateway wg0.conf file
       template:
-        src: "../templates/ansible/wg0_gateway.conf.template"
+        src: "../templates/wireguard/wg0_gateway.conf.template"
         dest: "/etc/wireguard/wg0.conf"
       vars:
         public_key: "{{ hostvars.proxy.public_key_proxy['content'] | b64decode }}"
