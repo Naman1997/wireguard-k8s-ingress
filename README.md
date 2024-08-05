@@ -21,6 +21,15 @@ vim ansible/wireguard_vars
 vim ansible/duckdns_vars
 vim ansible_hosts
 
+# Allow traffic to the UDP port that you're using for wireguard on your VPS
+# The port variable that you used for "wireguard_port" needs to be used
+
+# Bypass CGNAT in case you're using Digital Ocean or Oracle cloud
+# Repo: https://github.com/mochman/Bypass_CGNAT
+
+# Optionally you can install updates on both VMs
+# It is handled in the script in case you want to skip that, however it can take some time
+
 # Setup the connection
 make
 ```
