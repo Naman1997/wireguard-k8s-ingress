@@ -40,11 +40,11 @@ An example is provided below:
 ```
 # Create a nginx deployment and expose it on port 80
 kubectl create deployment nginx --image=nginx --replicas=5
-k expose deploy nginx --port 80
+kubectl expose deploy nginx --port 80
 
 # Edit this config to point to your domain
 vim ./nginx-example/ingress.yaml
 
 # Create the ingress object
-k create -f ./nginx-example/ingress.yaml
+kubectl create -f ./nginx-example/ingress.yaml
 ```
