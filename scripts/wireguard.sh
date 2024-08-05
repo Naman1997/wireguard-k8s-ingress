@@ -23,3 +23,5 @@ if [ $WIREGUARD_SETUP -ne 0 ]; then
     echo "Unable to setup wireguard. Please create a github issue for this one!"
     exit 1
 fi
+
+echo "Successfully installed and configured nginx on both VMs"

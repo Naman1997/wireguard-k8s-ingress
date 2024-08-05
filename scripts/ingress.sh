@@ -15,3 +15,5 @@ if [ $INGRESS_SETUP -ne 0 ]; then
     echo "Unable to setup ingress. Please make sure to cleanup older configs!"
     exit 1
 fi
+
+echo "Successfully installed nginx controller in nginx-ingress namespace"

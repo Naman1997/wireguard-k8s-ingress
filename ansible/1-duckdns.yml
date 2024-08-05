@@ -2,6 +2,10 @@
 - name: Configure gateway
   hosts: gateway
   tasks:
+    - name: Install docker
+      apt:
+        pkg: "docker.io"
+        state: "present"
     - name: Create a duckdns container
       become: yes
       community.docker.docker_container:
