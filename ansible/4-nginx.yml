@@ -1,7 +1,7 @@
 ---
 - hosts: proxy
   tasks:
-    - name: "Capture all the worker IPs"
+    - name: Capture all the worker IPs
       ansible.builtin.shell: kubectl get nodes -l node-role.kubernetes.io/master!=true,node-role.kubernetes.io/controlplane!=true -o=jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' |  tr " " "\n"
       register: nodes
       delegate_to: localhost

@@ -1,14 +1,11 @@
 ---
 - name: Configure SSH
   hosts: all
-  gather_facts: no
   tasks:
     - name: Add hosts to known_hosts
       shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
       delegate_to: localhost
       run_once: yes
       loop: "{{ groups['proxy'] + groups['gateway'] }}"
-    - name: Gather facts for first time
-      ansible.builtin.setup:
     - name: Check SSH connection
       command: hostname
