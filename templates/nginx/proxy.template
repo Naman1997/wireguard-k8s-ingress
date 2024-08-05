@@ -1,7 +1,7 @@
 upstream backend {
-    %{ for node in nodes ~}
-    server ${node};
-    %{endfor}
+    {% for node in nodes.stdout_lines %}
+    server {{ node }};
+    {% endfor %}
 }
 
 server {

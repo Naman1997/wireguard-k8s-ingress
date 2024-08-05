@@ -8,4 +8,4 @@ controller:
   kind: DaemonSet
   service:
     # Change your Load Balancer's IP here
-    externalIPs: [192.168.122.217]
+    externalIPs: [{{ingressIP}}]

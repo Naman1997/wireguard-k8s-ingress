@@ -1,0 +1,11 @@
+---
+- name: Configure SSH
+  hosts: all
+  tasks:
+    - name: Add hosts to known_hosts
+      shell: "ssh-keyscan -H {{ hostvars[item].ansible_host }} >> ~/.ssh/known_hosts"
+      delegate_to: localhost
+      run_once: yes
+      loop: "{{ groups['proxy'] + groups['gateway'] }}"
+    - name: Check SSH connection
+      command: hostname
