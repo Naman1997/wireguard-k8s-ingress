@@ -1,5 +1,4 @@
 ---
-
 - hosts: proxy
   tasks:
     - name: "Capture all the worker IPs"

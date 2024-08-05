@@ -1,0 +1,16 @@
+---
+- hosts: proxy
+  tasks:
+    - name: Install ingress controller
+      delegate_to: localhost
+      template:
+        src: "../templates/ingress/nginx-controller.template"
+        dest: "/tmp/nginx-controller.yaml"
+      vars:
+        ingressIP: "{{ ansible_eth0.ipv4.address }}"
+    - name: Add helm repo
+      delegate_to: localhost
+      ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    - name: Install ingress controller
+      delegate_to: localhost
+      ansible.builtin.command: helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --values /tmp/nginx-controller.yaml --create-namespace
