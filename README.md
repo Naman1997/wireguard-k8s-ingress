@@ -25,6 +25,7 @@ If let's say, the proxy VM, VPS and Client are in different countries, then this
 - A kubernetes cluster running in the same subnet as the vm
 - The host that runs this script needs to have access to the kubernetes cluster using kubectl and helm
 - The host that runs this script should have passwordless SSH access into both the proxy VM as well as the VPS
+- The CIDR 10.20.0.0/24 should be available on both the VPS and the proxy VM
 
 ## How to install
 
@@ -82,3 +83,20 @@ kubectl create -f ./nginx-example/ingress.yaml
 
 - [Bypass CGNAT](https://github.com/mochman/Bypass_CGNAT)
 - [Setup WireGuard Firewall Rules](https://www.cyberciti.biz/faq/how-to-set-up-wireguard-firewall-rules-in-linux/)
+
+
+
+
+
+sudo docker run -d -v ./caddy/data/:/data/ -v ./caddy/config/:/config/ -v ./caddy/Caddyfile:/etc/caddy/Caddyfile -p 80:80 -p 443:443 caddy:alpine
+
+
+caddy/Caddyfile
+
+{
+    email aroranaman17@gmail.com
+}
+
+wg-ingress.duckdns.org {
+    reverse_proxy http://10.20.0.2:80
+}
