@@ -1,5 +1,6 @@
 {
     "duckdns_domain": "example.duckdns.org",
+    "duckdns_token": "Duckdns Token",
     "gateway_ssh_user": "ubuntu",
     "wireguard_port": "51820"
 }

@@ -39,6 +39,20 @@
       shell: "wg genkey | tee privatekey_gateway | wg pubkey > publickey_gateway"
       args:
         chdir: "/etc/wireguard"
+    - name: Make directory for helper scripts
+      shell: "mkdir -p /etc/wireguard/helper"
+    - name: Generate helper script - 1
+      template:
+        src: "../templates/wireguard/add-nat-routing.sh"
+        dest: "/etc/wireguard/helper/add-nat-routing.sh"
+      vars:
+        interface: "{{ gateway_internet_interface.stdout }}"
+    - name: Generate helper script - 2
+      template:
+        src: "../templates/wireguard/remove-nat-routing.sh"
+        dest: "/etc/wireguard/helper/remove-nat-routing.sh"
+      vars:
+        interface: "{{ gateway_internet_interface.stdout }}"
     - name: Get public key of gateway
       slurp:
         src: /etc/wireguard/publickey_gateway
@@ -85,4 +99,4 @@
     - name: Enable wg service
       shell: "systemctl enable wg-quick@wg0"
     - name: Ping the proxy
-      shell: "sleep 5 && ping -c 1 10.1.0.2"
+      shell: "sleep 5 && ping -c 1 10.20.0.2"

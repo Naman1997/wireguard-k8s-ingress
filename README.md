@@ -1,34 +1,63 @@
 # wireguard-k8s-ingress
 
+## Objective
+
+The basic idea is to have an encrypted tunnel for exposing ports from your kubernetes cluster through a VPS. This solves a couple issues that I would wanted to solve:
+- Minimal cost for a cluster: You can self-host the expensive part of the infa and just rent an extremely cheap VPS to pass through the traffic
+- No need to worry about MITM between the proxy and VPS: Encryted communication using WireGuard
+- No need to open ports in your personal firewall which is generally required when exposing local resources
+- Simplified installation: This script takes around 20 minutes to configure everything assuming you're on a brand new VMs
+
+## What this might be a bad idea for?
+
+This depends a lot on the server configuration and the bandwidth limits. However, as a general rule of thumb, this may be a bad idea for any bandwidth heavy websites that you may want to expose.
+
+The total latency a client will experience will be the sum of the following:
+- The latency between the proxy vm and the VPS
+- The latency between the client and the VPS
+
+If let's say, the proxy VM, VPS and Client are in different countries, then this latency will be significant. If all of them are in the same country, but the internet connection for any VM is capped at lets say 1 Mbps, then there will be bandwidth limitations and you can't really steam 1080p videos over that link at that point.
+
 ## Prerequisites
 
 - A small cloud vm with a public ip - this will act as the gateway for all traffic
-- One proxmox vm that connects to the cloud vm over wireguard in cloud
-- A kubernetes cluster running in the same subnet as the proxmox vm
-- The host that runs this script needs to have access to the kubernetes cluster
-
+- One vm that connects to the cloud vm over wireguard in cloud
+- A kubernetes cluster running in the same subnet as the vm
+- The host that runs this script needs to have access to the kubernetes cluster using kubectl and helm
+- The host that runs this script should have passwordless SSH access into both the proxy VM as well as the VPS
 
 ## How to install
 
+#### Optional Steps
+
+I would recommend to run the following in order to save yourself some time. Although these commands are present in the playbook, you may want to run them because the ansible output does not stream the current state - which means you may have to wait for a bit for these commands to finish.
+
+```
+# On the cloud VPS
+sudo apt update -y && sudo apt dist-upgrade -y
+sudo apt install docker.io nginx wireguard-tools -y
+sudo reboot
+
+# On the proxy VM
+sudo apt update -y && sudo apt dist-upgrade -y
+sudo apt install nginx wireguard-tools -y
+sudo reboot
+```
+
+#### Configuration
+
 ```
 # Create a copy of config example files - Do not move or delete the example files!
-cp ansible/wireguard_vars.example ansible/wireguard_vars
-cp ansible/duckdns_vars.example ansible/duckdns_vars
+cp ansible/ansible_vars.example ansible/ansible_vars
 cp ansible_hosts.example ansible_hosts
 
 # Update all the config example files
-vim ansible/wireguard_vars
-vim ansible/duckdns_vars
+vim ansible/ansible_vars
 vim ansible_hosts
 
 # Allow traffic to the UDP port that you're using for wireguard on your VPS
-# The port variable that you used for "wireguard_port" needs to be used
-
-# Bypass CGNAT in case you're using Digital Ocean or Oracle cloud
-# Repo: https://github.com/mochman/Bypass_CGNAT
-
-# Optionally you can install updates on both VMs
-# It is handled in the script in case you want to skip that, however it can take some time
+# For example, if you're using AWS, open ports using Network Security Groups
+# The port variable that you used for "wireguard_port" in "ansible_vars" needs to be opened here for UDP traffic
 
 # Setup the connection
 make
