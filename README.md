@@ -90,7 +90,7 @@ vim ./nginx-example/ingress.yaml
 kubectl create -f ./nginx-example/ingress.yaml
 ```
 
-## Modifying domains to be used
+## Adding new domains
 
 As a getting started example, this project uses the duckdns domain you provide as a valid domain. In case you wish to use your own domain, you need to follow these steps:
 - SSH into your VPS and update `~/caddy/Caddyfile`
