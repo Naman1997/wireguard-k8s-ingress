@@ -77,3 +77,8 @@ vim ./nginx-example/ingress.yaml
 # Create the ingress object
 kubectl create -f ./nginx-example/ingress.yaml
 ```
+
+## References
+
+- [Bypass CGNAT](https://github.com/mochman/Bypass_CGNAT)
+- [Setup WireGuard Firewall Rules](https://www.cyberciti.biz/faq/how-to-set-up-wireguard-firewall-rules-in-linux/)
