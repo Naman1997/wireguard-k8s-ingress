@@ -11,8 +11,8 @@ fi
 # Install docker module for ansible
 ansible-galaxy collection install community.docker
 
-if [ ! -f ansible/ansible_vars ]; then
-    echo "File 'ansible/ansible_vars' not found!"
+if [ ! -f ansible_vars ]; then
+    echo "File 'ansible_vars' not found!"
     exit 1
 fi
 
@@ -21,8 +21,8 @@ if [ ! -f ansible_hosts ]; then
     exit 1
 fi
 
-if cmp --silent -- "ansible/ansible_vars" "ansible/ansible_vars.example"; then
-  echo "File 'ansible/ansible_vars' has not been modified!"
+if cmp --silent -- "ansible_vars" "ansible_vars.example"; then
+  echo "File 'ansible_vars' has not been modified!"
 fi
 
 if cmp --silent -- "ansible_hosts" "ansible_hosts.example"; then

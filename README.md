@@ -2,36 +2,27 @@
 
 ## Objective
 
-The basic idea is to have an encrypted tunnel for exposing ports from your kubernetes cluster through a VPS. This solves a couple issues that I would wanted to solve:
-- Minimal cost for a cluster: You can self-host the expensive part of the infa and just rent an extremely cheap VPS to pass through the traffic
+The objective of this project is to create an encrypted tunnel for exposing services on your kubernetes cluster through a VPS. This solves a couple issues for home-labs:
+- Minimal cost for a cluster: You can self-host the expensive part of the infastructure and just rent an extremely cheap/free VPS to pass through the traffic
 - No need to worry about MITM between the proxy and VPS: Encryted communication using WireGuard
-- No need to open ports in your personal firewall which is generally required when exposing local resources
+- No need to open ports on your router which is generally required when exposing local services
 - Simplified installation: This script takes around 20 minutes to configure everything assuming you're on a brand new VMs
-
-## What this might be a bad idea for?
-
-This depends a lot on the server configuration and the bandwidth limits. However, as a general rule of thumb, this may be a bad idea for any bandwidth heavy websites that you may want to expose.
-
-The total latency a client will experience will be the sum of the following:
-- The latency between the proxy vm and the VPS
-- The latency between the client and the VPS
-
-If let's say, the proxy VM, VPS and Client are in different countries, then this latency will be significant. If all of them are in the same country, but the internet connection for any VM is capped at lets say 1 Mbps, then there will be bandwidth limitations.
 
 ## Prerequisites
 
 - A small cloud VPS with a public ip - this will act as the gateway for all traffic
-- A local proxy VM that connects to the cloud VPS over WireGuard
-- A kubernetes cluster running in the same subnet as the proxy vm
+- A proxy VM that will connect to the cloud VPS over WireGuard
+- Both the VPS as well as the cloud VM need to be running Debian or it's derivatives like Ubuntu
+- A kubernetes cluster running in the same subnet as the proxy VM
 - The host that runs this script needs to have access to the kubernetes cluster using kubectl and helm
 - The host that runs this script should have passwordless SSH access into both the proxy VM as well as the VPS
 - The CIDR 10.20.0.0/24 should be available on both the VPS and the proxy VM
 
 ## How to install
 
-#### Optional Steps
+### Optional Steps
 
-I would recommend to run the following in order to save yourself some time. Although these commands are present in the playbook, you may want to run them because the ansible output does not stream the current state - which means you may have to wait for a bit for these commands to finish.
+I would recommend to run the following commands. Although these commands are present in the playbook, you may want to run them because the ansible output does not stream the progress.
 
 ```
 # On the cloud VPS
@@ -45,15 +36,15 @@ sudo apt install nginx wireguard-tools -y
 sudo reboot
 ```
 
-#### Configuration
+### Configuration
 
 ```
 # Create a copy of config example files - Do not move or delete the example files!
-cp ansible/ansible_vars.example ansible/ansible_vars
+cp ansible_vars.example ansible_vars
 cp ansible_hosts.example ansible_hosts
 
 # Update all the config example files
-vim ansible/ansible_vars
+vim ansible_vars
 vim ansible_hosts
 ```
 
