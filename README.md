@@ -79,24 +79,13 @@ vim ./nginx-example/ingress.yaml
 kubectl create -f ./nginx-example/ingress.yaml
 ```
 
+## Modifying domains to be used
+
+As a getting started example, this project uses the duckdns domain you provide as a valid domain. In case you wish to use your own domain, you need to follow these steps:
+- SSH into your VPS and update `~/caddy/Caddyfile`
+- Create an ingress object using the same domain. Note that the ingress object will keep using port 80 in kubernetes as the HTTPS challenge is handled from the VPS
+
 ## References
 
 - [Bypass CGNAT](https://github.com/mochman/Bypass_CGNAT)
 - [Setup WireGuard Firewall Rules](https://www.cyberciti.biz/faq/how-to-set-up-wireguard-firewall-rules-in-linux/)
-
-
-
-
-
-sudo docker run -d -v ./caddy/data/:/data/ -v ./caddy/config/:/config/ -v ./caddy/Caddyfile:/etc/caddy/Caddyfile -p 80:80 -p 443:443 caddy:alpine
-
-
-caddy/Caddyfile
-
-{
-    email aroranaman17@gmail.com
-}
-
-wg-ingress.duckdns.org {
-    reverse_proxy http://10.20.0.2:80
-}
