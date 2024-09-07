@@ -43,16 +43,18 @@
       shell: "mkdir -p /etc/wireguard/helper"
     - name: Generate helper script - 1
       template:
-        src: "../templates/wireguard/add-nat-routing.sh"
+        src: "../templates/iptables/add-nat-routing.sh"
         dest: "/etc/wireguard/helper/add-nat-routing.sh"
       vars:
         interface: "{{ gateway_internet_interface.stdout }}"
     - name: Generate helper script - 2
       template:
-        src: "../templates/wireguard/remove-nat-routing.sh"
+        src: "../templates/iptables/remove-nat-routing.sh"
         dest: "/etc/wireguard/helper/remove-nat-routing.sh"
       vars:
         interface: "{{ gateway_internet_interface.stdout }}"
+    - name: Make helper scripts executable
+      shell: "chmod +x /etc/wireguard/helper/add-nat-routing.sh && chmod +x /etc/wireguard/helper/remove-nat-routing.sh"
     - name: Get public key of gateway
       slurp:
         src: /etc/wireguard/publickey_gateway
