@@ -16,7 +16,7 @@ The total latency a client will experience will be the sum of the following:
 - The latency between the proxy vm and the VPS
 - The latency between the client and the VPS
 
-If let's say, the proxy VM, VPS and Client are in different countries, then this latency will be significant. If all of them are in the same country, but the internet connection for any VM is capped at lets say 1 Mbps, then there will be bandwidth limitations and you can't really steam 1080p videos over that link at that point.
+If let's say, the proxy VM, VPS and Client are in different countries, then this latency will be significant. If all of them are in the same country, but the internet connection for any VM is capped at lets say 1 Mbps, then there will be bandwidth limitations.
 
 ## Prerequisites
 
