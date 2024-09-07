@@ -2,17 +2,35 @@
 
 ## Objective
 
-The objective of this project is to create an encrypted tunnel for exposing services on your kubernetes cluster through a VPS. This solves a couple issues for home-labs:
+The objective of this project is to create an encrypted tunnel used for exposing services on your kubernetes cluster through a VPS. This project is also useful for people who wish learn kubernetes by deploying on their own hardware.
+
+This approach solves a couple issues:
 - Minimal cost for a cluster: You can self-host the expensive part of the infastructure and just rent an extremely cheap/free VPS to pass through the traffic
 - No need to worry about MITM between the proxy and VPS: Encryted communication using WireGuard
 - No need to open ports on your router which is generally required when exposing local services
 - Simplified installation: This script takes around 20 minutes to configure everything assuming you're on a brand new VMs
+- No need for a static IP on either side of the connection
+- Hide your public IP address while still exposing k8s services
+- Optionally enable security features such as a WAF from your cloud provider of choice
+
+## What does this project do?
+
+You can read all the steps in the `ansible` and `scripts` directories, however overview of the steps is as follows:
+- Checks for relevant binaries that are expected to be present on the host running the script
+- Checks for access to a kubernetes cluster from the host running the script
+- Checks for passwordless SSH connectivity from the host to the cloud VPS and the proxy VM 
+- Installs docker on the cloud VPS and sets up a duckdns container monitoring the IP address of the cloud VM
+- Sets up unattended updates on both VMs
+- Sets up a WireGuard tunnel between both VMs
+- Creates a caddy container on the cloud VM and nginx configuration on the proxy VM for load-balancing the traffic across worker nodes
+- Installs nginx ingress controller on the kubernetes cluster using the IP address of the proxy VM as the upstream traffic load-balancer
 
 ## Prerequisites
 
 - A small cloud VPS with a public ip - this will act as the gateway for all traffic
 - A proxy VM that will connect to the cloud VPS over WireGuard
 - Both the proxy VM as well as the cloud VM need to be running Debian or it's derivatives like Ubuntu
+- sudo users for both VMs
 - A kubernetes cluster running in the same subnet as the proxy VM
 - The host that runs this script needs to have access to the kubernetes cluster using kubectl and helm
 - The host that runs this script should have passwordless SSH access into both the proxy VM as well as the VPS
@@ -40,6 +58,7 @@ sudo reboot
 
 ```
 # Create a copy of config example files - Do not move or delete the example files!
+# Make sure to supply users with sudo privileges for both VMs
 cp ansible_vars.example ansible_vars
 cp ansible_hosts.example ansible_hosts
 
@@ -53,7 +72,6 @@ The ansible vars to be updated are:
 | -------- | ------- |
 | duckdns_domain  | The DuckDNS domain that will be used for inital setup. This domain will be used to track the IP address of your VPS in case it changes.    |
 | duckdns_token | Your DuckDNS authentication token.     |
-| gateway_ssh_user    | The username to be used to SSH into the VPS.    |
 | wireguard_port    | The port to be used for routing wireguard traffic. You will need to make sure that this port along with ports 80 and 443 are accessible from your Cloud Provider.    |
 | ssl_email    | Email address to be used for setting up Let's Encrypt certificates.    |
 
@@ -74,7 +92,7 @@ An example is provided below:
 kubectl create deployment nginx --image=nginx --replicas=5
 kubectl expose deploy nginx --port 80
 
-# Edit this config to point to your domain
+# Edit this config to point to your duckdns domain
 vim ./nginx-example/ingress.yaml
 
 # Create the ingress object

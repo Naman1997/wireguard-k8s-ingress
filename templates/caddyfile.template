@@ -2,6 +2,6 @@
     email {{ ssl_email }}
 }
 
-wg-ingress.duckdns.org {
+{{ duckdns_domain }} {
     reverse_proxy http://10.20.0.2:80
 }
