@@ -36,7 +36,7 @@ I would recommend to run the following in order to save yourself some time. Alth
 ```
 # On the cloud VPS
 sudo apt update -y && sudo apt dist-upgrade -y
-sudo apt install docker.io nginx wireguard-tools -y
+sudo apt install docker.io wireguard-tools -y
 sudo reboot
 
 # On the proxy VM
