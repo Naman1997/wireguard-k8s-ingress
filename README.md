@@ -12,7 +12,7 @@ The objective of this project is to create an encrypted tunnel for exposing serv
 
 - A small cloud VPS with a public ip - this will act as the gateway for all traffic
 - A proxy VM that will connect to the cloud VPS over WireGuard
-- Both the VPS as well as the cloud VM need to be running Debian or it's derivatives like Ubuntu
+- Both the proxy VM as well as the cloud VM need to be running Debian or it's derivatives like Ubuntu
 - A kubernetes cluster running in the same subnet as the proxy VM
 - The host that runs this script needs to have access to the kubernetes cluster using kubectl and helm
 - The host that runs this script should have passwordless SSH access into both the proxy VM as well as the VPS
