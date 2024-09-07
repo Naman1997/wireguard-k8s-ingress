@@ -13,5 +13,5 @@
         restart_policy: "unless-stopped"
         env:
           UPDATE_IP: "true"
-          SUBDOMAINS: "{{ gateway_subdomain }}"
-          TOKEN: "{{ token }}"
+          SUBDOMAINS: "{{ duckdns_domain }}"
+          TOKEN: "{{ duckdns_token }}"

@@ -1,6 +1,6 @@
 [Interface]
 PrivateKey = {{ private_key | trim }}
-Address = 10.1.0.2/24
+Address = 10.20.0.2/24
 
 [Peer]
 PublicKey = {{ public_key | trim }}

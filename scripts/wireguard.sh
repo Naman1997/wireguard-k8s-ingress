@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setup DuckDNS
-ansible-playbook -v ansible/1-duckdns.yml -i ansible_hosts -e "@ansible/duckdns_vars"
+ansible-playbook -v ansible/1-duckdns.yml -i ansible_hosts -e "@ansible/ansible_vars"
 DUCKDNS_SETUP=$?
 if [ $DUCKDNS_SETUP -ne 0 ]; then
     echo "Unable to create docker container for duckdns. Make sure docker is installed on the VPS."
@@ -17,7 +17,7 @@ if [ $UPGRADES_SETUP -ne 0 ]; then
 fi
 
 # Setup wireguard
-ansible-playbook -v ansible/3-wireguard.yml -i ansible_hosts -e "@ansible/wireguard_vars"
+ansible-playbook -v ansible/3-wireguard.yml -i ansible_hosts -e "@ansible/ansible_vars"
 WIREGUARD_SETUP=$?
 if [ $WIREGUARD_SETUP -ne 0 ]; then
     echo "Unable to setup wireguard. Please create a github issue for this one!"

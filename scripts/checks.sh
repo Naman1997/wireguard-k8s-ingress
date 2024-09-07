@@ -4,21 +4,15 @@
 which ansible ansible-galaxy kubectl helm
 BINARIES_CHECK=$?
 if [ $BINARIES_CHECK -ne 0 ]; then
-    echo "Some binay is missing...exiting"
+    echo "Some binay is missing (ansible ansible-galaxy kubectl helm)...exiting"
     exit 1
 fi
 
 # Install docker module for ansible
 ansible-galaxy collection install community.docker
 
-# Check that vars files have been created
-if [ ! -f ansible/duckdns_vars ]; then
-    echo "File 'ansible/duckdns_vars' not found!"
-    exit 1
-fi
-
-if [ ! -f ansible/wireguard_vars ]; then
-    echo "File 'ansible/wireguard_vars' not found!"
+if [ ! -f ansible/ansible_vars ]; then
+    echo "File 'ansible/ansible_vars' not found!"
     exit 1
 fi
 
@@ -27,13 +21,8 @@ if [ ! -f ansible_hosts ]; then
     exit 1
 fi
 
-# Make sure files have been modified
-if cmp --silent -- "ansible/duckdns_vars" "ansible/duckdns_vars.example"; then
-  echo "File 'ansible/duckdns_vars' has not been modified!"
-fi
-
-if cmp --silent -- "ansible/wireguard_vars" "ansible/wireguard_vars.example"; then
-  echo "File 'ansible/wireguard_vars' has not been modified!"
+if cmp --silent -- "ansible/ansible_vars" "ansible/ansible_vars.example"; then
+  echo "File 'ansible/ansible_vars' has not been modified!"
 fi
 
 if cmp --silent -- "ansible_hosts" "ansible_hosts.example"; then
