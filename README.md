@@ -20,9 +20,9 @@ If let's say, the proxy VM, VPS and Client are in different countries, then this
 
 ## Prerequisites
 
-- A small cloud vm with a public ip - this will act as the gateway for all traffic
-- One vm that connects to the cloud vm over wireguard in cloud
-- A kubernetes cluster running in the same subnet as the vm
+- A small cloud VPS with a public ip - this will act as the gateway for all traffic
+- A local proxy VM that connects to the cloud VPS over WireGuard
+- A kubernetes cluster running in the same subnet as the proxy vm
 - The host that runs this script needs to have access to the kubernetes cluster using kubectl and helm
 - The host that runs this script should have passwordless SSH access into both the proxy VM as well as the VPS
 - The CIDR 10.20.0.0/24 should be available on both the VPS and the proxy VM
@@ -55,8 +55,19 @@ cp ansible_hosts.example ansible_hosts
 # Update all the config example files
 vim ansible/ansible_vars
 vim ansible_hosts
+```
 
-# Allow traffic to the UDP port that you're using for wireguard on your VPS
+The ansible vars to be updated are:
+| Variable    | Description |
+| -------- | ------- |
+| duckdns_domain  | The DuckDNS domain that will be used for inital setup. This domain will be used to track the IP address of your VPS in case it changes.    |
+| duckdns_token | Your DuckDNS authentication token.     |
+| gateway_ssh_user    | The username to be used to SSH into the VPS.    |
+| wireguard_port    | The port to be used for routing wireguard traffic. You will need to make sure that this port along with ports 80 and 443 are accessible from your Cloud Provider.    |
+| ssl_email    | Email address to be used for setting up Let's Encrypt certificates.    |
+
+```
+# Allow traffic to ports 80, 443 and to the UDP port that you're using for wireguard on your VPS
 # For example, if you're using AWS, open ports using Network Security Groups
 # The port variable that you used for "wireguard_port" in "ansible_vars" needs to be opened here for UDP traffic
 
