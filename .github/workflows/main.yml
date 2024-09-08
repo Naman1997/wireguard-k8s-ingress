@@ -20,4 +20,4 @@ jobs:
       
       # Check syntax for all ansible playbooks
       - name: Validate all playbooks
-        run: ansible-playbook playbooks/*.yaml --syntax-check
+        run: ansible-playbook ansible/*.yml --syntax-check
