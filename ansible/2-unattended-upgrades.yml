@@ -1,7 +1,7 @@
 ---
 - name: Configure unattended-upgrades
   hosts: all
-  become: yes
+  become: true
   tasks:
     - name: Install unattended-upgrades
       ansible.builtin.apt:
