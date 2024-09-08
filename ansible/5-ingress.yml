@@ -14,4 +14,3 @@
     - name: Install ingress controller
       delegate_to: localhost
       ansible.builtin.command: helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --values /tmp/nginx-controller.yaml --create-namespace
-      

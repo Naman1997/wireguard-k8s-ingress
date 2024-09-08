@@ -15,4 +15,3 @@
           UPDATE_IP: "true"
           SUBDOMAINS: "{{ duckdns_domain }}"
           TOKEN: "{{ duckdns_token }}"
-          
