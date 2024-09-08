@@ -1,5 +1,7 @@
 # wireguard-k8s-ingress
 
+[![Ansible](https://github.com/Naman1997/wireguard-k8s-ingress/actions/workflows/main.yml/badge.svg)](https://github.com/Naman1997/wireguard-k8s-ingress/actions/workflows/main.yml)
+
 ## Objective
 
 The objective of this project is to create an encrypted tunnel used for exposing services on your kubernetes cluster through a VPS. This project is also useful for people who wish learn kubernetes by deploying on their own hardware.
