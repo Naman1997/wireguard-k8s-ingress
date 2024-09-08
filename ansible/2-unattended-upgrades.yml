@@ -10,7 +10,7 @@
 
     # ref. https://wiki.debian.org/UnattendedUpgrades
     - name: Create apt file that would be made by interactive dpkg-reconfigure
-      file:
+      ansible.builtin.file:
         path: "/etc/apt/apt.conf.d/20auto-upgrades"
         owner: "root"
         group: "root"
