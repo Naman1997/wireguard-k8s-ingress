@@ -17,7 +17,7 @@
         mode: "0644"
         state: "touch"
     - name: "Populate 20auto-upgrades apt file"
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: "/etc/apt/apt.conf.d/20auto-upgrades"
         line: '{{ item }}'
       with_items:
@@ -26,8 +26,7 @@
 
     # ref. https://help.ubuntu.com/community/Lubuntu/Documentation/RemoveOldKernels#Shell
     - name: Enable remove unused deps in /etc/apt/apt.conf.d/50unattended-upgrades
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: "/etc/apt/apt.conf.d/50unattended-upgrades"
         line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";'
         insertafter: '^//Unattended-Upgrade::Remove-Unused-Dependencies'
-        
