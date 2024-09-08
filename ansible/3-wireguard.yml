@@ -1,10 +1,9 @@
 ---
-- name: Configure SSH
-  hosts: all
-  gather_facts: no
+- hosts: all
+  gather_facts: false
   tasks:
     - name: Install Wireguard
-      become: yes
+      become: true
       ansible.builtin.package:
         name: wireguard-tools
         state: present
@@ -14,7 +13,7 @@
       delay: 10
 
 - hosts: proxy
-  become: yes
+  become: true
   tasks:
     - name: Generate Wireguard keys on proxy
       shell: "wg genkey | tee privatekey_proxy | wg pubkey > publickey_proxy"
@@ -30,7 +29,7 @@
       register: private_key_proxy
 
 - hosts: gateway
-  become: yes
+  become: true
   tasks:
     - name: Get internet-facing interface from gateway
       shell: "ip route get 8.8.8.8 | awk '/dev/ { print $5 }'"
@@ -65,11 +64,11 @@
       register: private_key_gateway
 
 - hosts: proxy
-  become: yes
+  become: true
   tasks:
     - name: Remove any older connection
       shell: "wg-quick down wg0 && sleep 5"
-      ignore_errors: yes
+      ignore_errors: true
     - name: Generate proxy wg0.conf file
       template:
         src: "../templates/wireguard/wg0_proxy.conf.template"
@@ -83,11 +82,11 @@
       shell: "systemctl enable wg-quick@wg0"
 
 - hosts: gateway
-  become: yes
+  become: true
   tasks:
     - name: Remove any older connection
       shell: "wg-quick down wg0 && sleep 5"
-      ignore_errors: yes
+      ignore_errors: true
     - name: Generate gateway wg0.conf file
       template:
         src: "../templates/wireguard/wg0_gateway.conf.template"

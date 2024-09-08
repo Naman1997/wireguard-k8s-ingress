@@ -3,10 +3,10 @@
   hosts: gateway
   tasks:
     - name: Install docker
-      become: yes
+      become: true
       shell: "apt install docker.io -y"
     - name: Create a duckdns container
-      become: yes
+      become: true
       community.docker.docker_container:
         name: duckdns
         image: lscr.io/linuxserver/duckdns:latest
