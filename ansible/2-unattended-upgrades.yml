@@ -4,7 +4,7 @@
   become: yes
   tasks:
     - name: Install unattended-upgrades
-      apt:
+      ansible.builtin.apt:
         pkg: "unattended-upgrades"
         state: "present"
 
@@ -30,3 +30,4 @@
         dest: "/etc/apt/apt.conf.d/50unattended-upgrades"
         line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";'
         insertafter: '^//Unattended-Upgrade::Remove-Unused-Dependencies'
+        

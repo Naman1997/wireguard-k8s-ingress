@@ -6,7 +6,8 @@
       ansible.builtin.command: hostname
     - name: Update and upgrade apt packages
       become: true
-      apt:
+      ansible.builtin.apt:
         upgrade: true
         update_cache: true
         cache_valid_time: 86400
+        

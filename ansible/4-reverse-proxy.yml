@@ -40,3 +40,4 @@
           - ./caddy/data/:/data/
           - ./caddy/config/:/config/
           - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+          
