@@ -19,7 +19,7 @@
     - name: "Populate 20auto-upgrades apt file"
       lineinfile:
         dest: "/etc/apt/apt.conf.d/20auto-upgrades"
-        line: '{{item}}'
+        line: '{{ item }}'
       with_items:
         - 'APT::Periodic::Update-Package-Lists "1";'
         - 'APT::Periodic::Unattended-Upgrade "1";'
