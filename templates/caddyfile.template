@@ -2,6 +2,10 @@
     email {{ ssl_email }}
 }
 
-{{ duckdns_domain }} {
+http://{{ duckdns_domain }} {
+    https://{{ duckdns_domain }} permanent
+}
+
+https://{{ duckdns_domain }} {
     reverse_proxy http://10.20.0.2:80
 }
