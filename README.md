@@ -1,6 +1,7 @@
 # wireguard-k8s-ingress
 
 [![Ansible](https://github.com/Naman1997/wireguard-k8s-ingress/actions/workflows/main.yml/badge.svg)](https://github.com/Naman1997/wireguard-k8s-ingress/actions/workflows/main.yml)
+ [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naman1997/proxmox-terraform-template-k8s/blob/main/LICENSE)
 
 ## Objective
 
