@@ -17,6 +17,8 @@ This approach solves a couple issues:
 
 ## What does this project do?
 
+![Traffic flow across different networks](Traffic-Flow.svg)
+
 You can read all the steps in the `ansible` and `scripts` directories, however overview of the steps is as follows:
 - Checks for relevant binaries that are expected to be present on the host running the script
 - Checks for access to a kubernetes cluster from the host running the script
