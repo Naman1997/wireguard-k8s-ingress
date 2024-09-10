@@ -6,4 +6,5 @@ Address = 10.20.0.2/24
 PublicKey = {{ public_key | trim }}
 AllowedIPs = 10.20.0.1/32
 Endpoint = {{ duckdns_domain }}:{{ wireguard_port }}
-PersistentKeepalive = 25
+PersistentKeepalive = 10
+PresharedKey = {{ preshared_key | trim }}

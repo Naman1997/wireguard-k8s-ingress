@@ -9,3 +9,4 @@ PrivateKey = {{ private_key | trim }}
 [Peer]
 PublicKey = {{ public_key | trim }}
 AllowedIPs = 10.20.0.2/32
+PresharedKey = {{ preshared_key | trim }}

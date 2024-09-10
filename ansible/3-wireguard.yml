@@ -19,6 +19,10 @@
       shell: "wg genkey | tee privatekey_proxy | wg pubkey > publickey_proxy"
       args:
         chdir: "/etc/wireguard"
+    - name: Generate Wireguard pre-shared key
+      shell: "wg genpsk > preshared_key"
+      args:
+        chdir: "/etc/wireguard"
     - name: Get public key of proxy
       slurp:
         src: /etc/wireguard/publickey_proxy
@@ -27,6 +31,10 @@
       slurp:
         src: /etc/wireguard/privatekey_proxy
       register: private_key_proxy
+    - name: Get the preshared key to be used for the connection
+      slurp:
+        src: /etc/wireguard/preshared_key
+      register: preshared_key_content
 
 - hosts: gateway
   become: true
@@ -76,6 +84,7 @@
       vars:
         public_key: "{{ hostvars.gateway.public_key_gateway['content'] | b64decode }}"
         private_key: "{{ private_key_proxy['content'] | b64decode }}"
+        preshared_key: "{{ preshared_key_content['content'] | b64decode }}"
     - name: Startup connection
       shell: "wg-quick up wg0"
     - name: Enable wg service
@@ -94,6 +103,7 @@
       vars:
         public_key: "{{ hostvars.proxy.public_key_proxy['content'] | b64decode }}"
         private_key: "{{ private_key_gateway['content'] | b64decode }}"
+        preshared_key: "{{ hostvars.proxy.preshared_key_content['content'] | b64decode }}"
         interface: "{{ gateway_internet_interface.stdout }}"
     - name: Startup connection
       shell: "wg-quick up wg0"
