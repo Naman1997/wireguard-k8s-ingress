@@ -1,4 +1,5 @@
 {
+    admin off
     email {{ ssl_email }}
 }
 
