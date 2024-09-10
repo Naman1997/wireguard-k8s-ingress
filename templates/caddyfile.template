@@ -3,9 +3,10 @@
 }
 
 http://{{ duckdns_domain }} {
-    https://{{ duckdns_domain }} permanent
+    redir https://{{ duckdns_domain }}{uri} permanent
 }
 
 https://{{ duckdns_domain }} {
+    encode zstd gzip
     reverse_proxy http://10.20.0.2:80
 }
