@@ -11,6 +11,12 @@
     - name: Add helm repo
       delegate_to: localhost
       ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    - name: Create ingress controller namespace
+      delegate_to: localhost
+      ansible.builtin.command: kubectl create ns ingress-nginx
+    - name: Label ingress controller namespace (since we're using hostPorts)
+      delegate_to: localhost
+      ansible.builtin.command: kubectl label ns ingress-nginx pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged
     - name: Install ingress controller
       delegate_to: localhost
-      ansible.builtin.command: helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --values /tmp/nginx-controller.yaml --create-namespace
+      ansible.builtin.command: helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --values /tmp/nginx-controller.yaml

@@ -93,6 +93,9 @@ The last step will take some time to complete. Once finished, you can create an 
 An example is provided below:
 
 ```
+# Label namespace for highly restricted environments (eg: Talos Linux clusters)
+kubectl label ns default pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged
+
 # Create a nginx deployment and expose it on port 80
 kubectl create deployment nginx --image=nginx --replicas=5
 kubectl expose deploy nginx --port 80
